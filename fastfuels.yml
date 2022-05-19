@@ -1,0 +1,26 @@
+name: fastfuels
+channels: 
+  - conda-forge
+  - defaults
+dependencies:
+  - python
+  - numpy
+  - matplotlib
+  - scipy
+  - geopandas
+  - gdal
+  - pyvista
+  - imageio
+  - pandas
+  - rasterio
+  - moviepy 
+  - spyder
+  - colorcet
+  - zarr
+#  - shapely>=1.7.1
+#  - fsspec=0.8.3
+#  - s3fs=0.5.2
+#  - zarr=2.8.3
+#  - aiobotocore=1.2.1
+#  - botocore=1.19.52
+  

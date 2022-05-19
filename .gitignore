@@ -1,0 +1,10 @@
+# Distribution Files
+build/
+dist/
+*.egg-info/
+
+# Python Files
+__pycache__/
+
+# MacOS Specific
+.DS_Store
