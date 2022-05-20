@@ -63,6 +63,9 @@ class Domain_Params:
         self.nx = int(self.X_length/self.dx)       #number of x cells
         self.ny = int(self.Y_length/self.dy)        #number of y cells
         self.nz = nz            #number of z cells
+        self.qu_nz = 22         #Reasonable num of cells
+        #greater (Fuel h + 100m,  fuel h + 3x topo)
+        self.qu_height = 350    #CHANGE: From Sara's example
         self.xmin = xmin       #Shapefile xmin [m]
         self.ymin = ymin       #Shapefile ymin [m]
         self.x_center = x_center  #for FF
@@ -102,7 +105,7 @@ class QF_Fuel_Arrays:
             file_loc = os.path.join(QF_PATH, self.name_arrs[i])
             dat.fort_export(f_arr, file_loc)
 
-    def update_surface_moisture(self, moist_in_plot=0.1, moist_out_plot=1):
+    def update_surface_moisture(self, moist_in_plot=0.1, moist_out_plot='default'):
         '''
         Removes fuel in cells that overlaps road 
         Input:
@@ -118,7 +121,28 @@ class QF_Fuel_Arrays:
 
         z_layer = self.moist[0,:,:]
         z_layer[~msk] = moist_in_plot
+        if moist_out_plot == 'default':
+            moist_out_plot = moist_in_plot
         z_layer[msk] = moist_out_plot
+        
+    def mod_wetlands(self, fmc='default', bulk_density='default'):
+        '''
+        Removes modify fuel that intersect wetlands.shp
+        '''
+        bbox_path = self.dom.shape_paths.bbox
+        wetlands_path = self.dom.shape_paths.wetlands
+        wetlands = bs.clip_to_bbox(wetlands_path, bbox_path)
+        # Ensure burn plot is a ploygon
+        if isinstance(wetlands.iloc[0]['geometry'], LineString):
+            wetlands = bs.linestring_to_polygon(wetlands)
+        msk = self.mask_from_shape(wetlands)
+        
+        if fmc != 'default':
+            z_layer = self.moist[0,:,:]
+            z_layer[~msk] = fmc
+        if bulk_density != 'default':
+            z_layer = self.rhof[0,:,:]
+            z_layer[~msk] = bulk_density
            
     def mask_from_shape(self, shape):
         dom = self.dom
@@ -138,21 +162,22 @@ class QF_Fuel_Arrays:
         '''
         Removes fuel in cells that overlaps road 
         Input:
-            buffer = int or float to buffer roads shapefile
+            buffer = int or float to buffer fuelbreak shapefile
         '''
         bbox_path = self.dom.shape_paths.bbox
         if shape_path == 'default':
-            roads_path = self.dom.shape_paths.burn_plot
-        else: roads_path = shape_path
+            fb_path = self.dom.shape_paths.burn_plot
+        else: fb_path = shape_path
         
-        roads = bs.load_shapefile(roads_path)
-        if isinstance(roads.iloc[0]['geometry'], Polygon):
-            roads = bs.polygon_to_linestring(roads)
-            #roads.to_file(os.path.join(self.dom.shape_paths.SHAPE_PATH, "TEST.shp"))
+        fuelbreak = bs.load_shapefile(fb_path)
+        if isinstance(fuelbreak.iloc[0]['geometry'], Polygon):
+            fuelbreak = bs.polygon_to_linestring(fuelbreak)
+            #fuelbreak.to_file(os.path.join(self.dom.shape_paths.SHAPE_PATH, "TEST.shp"))
         
-        roads = bs.clip_to_bbox(roads, bbox_path)
-        roads = roads.buffer(buffer)
-        msk = self.mask_from_shape(roads)
+        fuelbreak = bs.clip_to_bbox(fuelbreak, bbox_path)
+        fuelbreak = fuelbreak.buffer(buffer)
+        fuelbreak = bs.clip_to_bbox(fuelbreak, bbox_path)
+        msk = self.mask_from_shape(fuelbreak)
 
         for f_arr in self.fuel_arrs:
             for z in range(f_arr.shape[0]):

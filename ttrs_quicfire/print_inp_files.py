@@ -7,6 +7,7 @@ Created on Thu Apr  7 12:32:10 2022
 
 from distutils.dir_util import copy_tree
 import os
+import numpy as np
 
 def main(qf_arrs):
     #Print QF input files
@@ -363,6 +364,68 @@ def print_QU_simparams_inp(dom, wind):
         input_file.write("0 !Explosive building damage flag (1 = on)\n")
         input_file.write("0 !Building Array Flag (1 = on)\n")
 
+##OLD Delete
+# def print_QU_simparams_inp(dom, wind):
+#     with open('QU_simparams.inp', 'w') as input_file:
+#         input_file.write("!QUIC 6.26\n")
+#         input_file.write("{} !nx - Domain Length(X) Grid Cells\n".format(dom.nx))
+#         input_file.write("{} !ny - Domain Width(Y) Grid Cells\n".format(dom.ny))
+#         input_file.write("22 !nz - Domain Height(Z) Grid Cells\n")
+#         input_file.write("{} !dx (meters)\n".format(dom.dx))
+#         input_file.write("{} !dy (meters)\n".format(dom.dy))
+#         input_file.write("3 !Vertical stretching flag(0=uniform,1=custom,2=parabolic Z,3=parabolic DZ,4=exponential)\n")
+#         input_file.write("1.500000 !Surface dz (meters)\n")
+#         input_file.write("4 !Number of uniform surface cells\n")
+#         input_file.write("!dz array (meters)\n")
+#         input_file.write("1\n")
+#         input_file.write("1.5\n")
+#         input_file.write("1.75\n")
+#         input_file.write("2\n")
+#         input_file.write("2.25\n")
+#         input_file.write("2.5\n")
+#         input_file.write("2.75\n")
+#         input_file.write("3\n")
+#         input_file.write("3.25\n")
+#         input_file.write("3.5\n")
+#         input_file.write("3.75\n")
+#         input_file.write("4\n")
+#         input_file.write("4.5\n")
+#         input_file.write("5.5\n")
+#         input_file.write("7\n")
+#         input_file.write("8.5\n")
+#         input_file.write("10\n")
+#         input_file.write("11.5\n")
+#         input_file.write("13\n")
+#         input_file.write("26\n")
+#         input_file.write("70\n")
+#         input_file.write("140\n")
+#         input_file.write("{} !total time increments\n".format(len(wind.times)))
+#         input_file.write("0 !UTC conversion\n")
+#         input_file.write("!Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n")
+#         for time in wind.times:
+#             input_file.write("{}\n".format(time))
+#         input_file.write("2 !rooftop flag (0-none, 1-log profile, 2-vortex)\n")
+#         input_file.write("3 !upwind cavity flag (0-none, 1-Rockle, 2-MVP, 3-HMVP)\n")
+#         input_file.write("4 !street canyon flag (0-none, 1-Roeckle, 2-CPB, 3-exp. param. PKK, 4-Roeckle w/ Fackrel)\n")
+#         input_file.write("1 !street intersection flag (0-off, 1-on)\n")
+#         input_file.write("3 !wake flag (0-none, 1-Rockle, 2-Modified Rockle, 3-Area Scaled)\n")
+#         input_file.write("1 !sidewall flag (0-off, 1-on)\n")
+#         input_file.write("2 !Canopy flag (1-Cionco w/o wakes, 2-Cionco w/ wakes)\n")
+#         input_file.write("1 !Season flag (1-Summer, 2-Winter, 3-Transition)\n")
+#         input_file.write("10 !Maximum number of iterations\n")
+#         input_file.write("1.1 !omegarelax\n")
+#         input_file.write("3 !Residual Reduction (Orders of Magnitude)\n")
+#         input_file.write("0 !Use Diffusion Algorithm (1 = on)\n")
+#         input_file.write("20 !Number of Diffusion iterations\n")
+#         input_file.write("0 !Domain rotation relative to true north (cw = +)\n")
+#         input_file.write("0.0  !UTMX of domain origin (m)\n")
+#         input_file.write("0.   !UTMY of domain origin (m)\n")
+#         input_file.write("1 !UTM zone\n")
+#         input_file.write("17 !UTM zone leter (1=A,2=B,etc.)\n")
+#         input_file.write("0 !QUIC-CFD Flag\n")
+#         input_file.write("0 !Explosive building damage flag (1 = on)\n")
+#         input_file.write("0 !Building Array Flag (1 = on)\n")
+
 
 def print_rasterorigin_txt():
     with open('rasterorigin.txt', 'w') as input_file:
@@ -416,3 +479,28 @@ def print_topo_inp(flat):
             input_file.write("500              !Iteration Reset Period\n")
             input_file.write("3              !Preconditioning\n")
 
+#Finish building
+def build_parabolic_dz_array(nz=22, Lz=350, n_surf=4, dz_surf=2.5):
+    dz = np.zeros(nz)
+    dz_high = Lz-dz_surf*n_surf
+    dz_low= 0
+    z_temp = nz*dz_surf
+    while abs(1-(z_temp/Lz))>0.001:
+        dz_max = 1/2(dz_low+dz_high)
+        c1=(dz_max-dz_surf)/(nz-n_surf )^2 
+        c2=-2*c1*n_surf
+        c3=dz_surf+c1*n_surf^2
+        
+        dz[0:n_surf]=dz_surf
+        
+        for k in range(n_surf,nz):
+            dz[k] = c1*k^2 + c2+k + c3   
+            
+        if z_temp>Lz:
+            dz_high=dz_max
+        elif z_temp<Lz:
+            dz_low=dz_max
+        else:
+            break
+            
+        

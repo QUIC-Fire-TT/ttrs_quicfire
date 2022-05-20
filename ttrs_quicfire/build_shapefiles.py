@@ -258,15 +258,15 @@ def build_ig_lines(shape_paths, spacing, wind_dir):
     ignition['Dist'] = ignition['geometry'].apply(lambda x: x.distance(down_wind_corner))
     #Clip ignition to burnplot
     ignition = gpd.clip(ignition, burnplt)
-    #Remove ignitions within 30m of roads
+    #Remove ignitions within 6m of roads
     burnplt_linestring = polygon_to_linestring(burnplt)
     buffered_burnplt_linestring = burnplt_linestring.buffer(6)
     if isinstance(buffered_burnplt_linestring, gpd.geoseries.GeoSeries):
         buffered_burnplt_linestring = gpd.GeoDataFrame(geometry=gpd.GeoSeries(buffered_burnplt_linestring))
-    ignition.to_file(os.path.join(shape_paths.SHAPE_PATH, 'ig_lines_before.shp'))
+    #ignition.to_file(os.path.join(shape_paths.SHAPE_PATH, 'ig_lines_before.shp'))
     ignition = gpd.overlay(ignition, buffered_burnplt_linestring, how = 'difference')
     ignition['Length'] = ignition.geometry.length
-    ignition.to_file(os.path.join(shape_paths.SHAPE_PATH, 'ig_lines_after.shp'))
+    #ignition.to_file(os.path.join(shape_paths.SHAPE_PATH, 'ig_lines_after.shp'))
     return ignition
 
 def line_to_points_to_df(dom, ignition_lines, spacing=4):
@@ -286,7 +286,7 @@ def line_to_points_to_df(dom, ignition_lines, spacing=4):
                 temp_dict[k] = [line[k],]*len(points)        
         temp_points = gpd.GeoDataFrame(temp_dict, crs=5070)
         ig_points = ig_points.append(temp_points)
-    ig_points.to_file(os.path.join(dom.shape_paths.SHAPE_PATH, 'ig_points.shp'))
+    #ig_points.to_file(os.path.join(dom.shape_paths.SHAPE_PATH, 'ig_points.shp'))
     
     df = pd.DataFrame(ig_points)
     df['X'] = ig_points.apply(lambda x_dim: (x_dim.geometry.x - dom.xmin), axis=1).to_numpy()
