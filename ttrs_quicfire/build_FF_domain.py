@@ -6,8 +6,23 @@ Created on Thu Mar 17 11:37:57 2022
 """
 import os
 import numpy as np
-import inspect
-import ttrs_quicfire.quic_fire as qf
+#import inspect
+
+
+def main():
+    #Domain SPECs
+    x_center = 1137913 #x coordinate of domain center (Albers Conic / ESPG:5070)
+    y_center = 1179758 #y coordinate of domain center (Albers Conic / ESPG:5070)
+    x_ext = 400 #x length (m)
+    y_ext = 400 #y length (m)
+    
+    #Output directory
+    OG_PATH = os.getcwd()
+    out_dir = os.path.join(OG_PATH,"FF_arrays")
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+    
+    fastfuels_access(x_center,y_center,x_ext,y_ext,out_dir)
 
 class AlbersEqualAreaConic: # Used exclusively to convert Albers  to Lat/Long (Forward) and the Inverse
     
@@ -143,9 +158,27 @@ class AlbersEqualAreaConic: # Used exclusively to convert Albers  to Lat/Long (F
             (1/(2*self.e))*np.log((1 - self.e*np.sin(phi))/(1 +
             self.e*np.sin(phi))))))
 
-def fastfuels_access(domain_params,out_dir): # NEEDS CLEANING UP # DRG, THIS CAN BE ADDED TO THE DOM CLASS ZACH PRODUCED
+def fastfuels_access(x_center,y_center,x_ext,y_ext,out_dir): 
+    """
+    Parameters
+    ----------
+    x_center : float
+        x coordinate of domain center (Albers Conic / ESPG:5070)
+    y_center : float
+        y coordinate of domain center (Albers Conic / ESPG:5070)
+    x_ext : float
+        x length (m)
+    y_ext : float
+        y length (m)
+    out_dir : str
+        
+
+    Returns
+    -------
+    Builds FF fuel arrays in out_dir
+
+    """
     import fastfuels as ff
-    x_center,y_center,x_ext,y_ext =  domain_params
     albers = AlbersEqualAreaConic()
     fio = ff.open('https://wifire-data.sdsc.edu:9000/fastfuels/index.fio', ftype='s3')
     fio.cache_limit = 1e16
@@ -156,7 +189,8 @@ def fastfuels_access(domain_params,out_dir): # NEEDS CLEANING UP # DRG, THIS CAN
     del roi
     
 def build_ff_domain(dom, out_dir, FF_request):
-    domain_params = [dom.x_center, dom.y_center, dom.X_length, dom.Y_length]  
+    import ttrs_quicfire.quic_fire as qf
+    x_center,y_center,x_ext,y_ext = [dom.x_center, dom.y_center, dom.X_length, dom.Y_length] 
     # if out_dir=='default':
     #     #main_loc should contain file path of main.py script calling this one
     #     main_loc = os.path.split(inspect.stack()[1][1])[0] #https://stackoverflow.com/questions/50499/how-do-i-get-the-path-and-name-of-the-file-that-is-currently-executing
@@ -165,7 +199,10 @@ def build_ff_domain(dom, out_dir, FF_request):
         os.makedirs(out_dir)
     
     if FF_request:
-        fastfuels_access(domain_params, out_dir)
-    
+        fastfuels_access(x_center,y_center,x_ext,y_ext,out_dir)
+        
     return qf.QF_Fuel_Arrays(dom, out_dir)
+
+if __name__=="__main__":
+    main()
     
