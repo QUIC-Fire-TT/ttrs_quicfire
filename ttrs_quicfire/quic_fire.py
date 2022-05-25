@@ -6,6 +6,7 @@ Created on Wed Mar 23 10:10:35 2022
 """
 
 #TT Libraries
+from distutils.log import debug
 import ttrs_quicfire.build_FF_domain as FF
 import ttrs_quicfire.dat_file_functions as dat
 import ttrs_quicfire.print_inp_files
@@ -37,6 +38,7 @@ class Shapefile_Paths:
                 return temp_path
                 print('Shapefile folder contains: ' + file)
             else:
+                print('[Error] File {file} not found.'.format(file=file))
                 return None 
         
         if SHAPE_PATH=='default':
@@ -47,6 +49,7 @@ class Shapefile_Paths:
         self.streams = shapefile_check(self, streams)
         self.wetlands = shapefile_check(self, wetlands)
         self.ignitions = shapefile_check(self, ignitions)
+        self.bbox = None
         
 class Domain_Params:
     """
@@ -131,7 +134,13 @@ class QF_Fuel_Arrays:
         '''
         bbox_path = self.dom.shape_paths.bbox
         wetlands_path = self.dom.shape_paths.wetlands
-        wetlands = bs.clip_to_bbox(wetlands_path, bbox_path)
+        try:
+            wetlands = bs.load_shapefile(wetlands_path)
+        except FileNotFoundError as e:
+            print('[Error] File wetlands.shp not found, cannot run mod_wetlands()')
+            return
+        wetlands = bs.clip_to_bbox(wetlands, bbox_path)
+        
         # Ensure burn plot is a ploygon
         if isinstance(wetlands.iloc[0]['geometry'], LineString):
             wetlands = bs.linestring_to_polygon(wetlands)
@@ -169,7 +178,11 @@ class QF_Fuel_Arrays:
             fb_path = self.dom.shape_paths.burn_plot
         else: fb_path = shape_path
         
-        fuelbreak = bs.load_shapefile(fb_path)
+        try:
+            fuelbreak = bs.load_shapefile(fb_path)
+        except:
+            print('File burn_plot.shp not found, cannot run build_fuelbreak()')
+            return
         if isinstance(fuelbreak.iloc[0]['geometry'], Polygon):
             fuelbreak = bs.polygon_to_linestring(fuelbreak)
             #fuelbreak.to_file(os.path.join(self.dom.shape_paths.SHAPE_PATH, "TEST.shp"))

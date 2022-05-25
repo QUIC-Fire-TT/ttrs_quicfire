@@ -5,6 +5,7 @@ Created on Wed Mar 23 22:52:28 2022
 @author: zcope
 """
 
+from distutils.log import debug
 import geopandas as gpd
 import pandas as pd
 import numpy as np
@@ -48,6 +49,8 @@ def clip_to_bbox(shp_to_clip, bbox):
 
 
 def load_shapefile(file_path):
+    if file_path == None:
+        raise FileNotFoundError
     shapefile = gpd.read_file(file_path)
     return shapefile.to_crs(epsg=5070)
 
