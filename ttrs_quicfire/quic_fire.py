@@ -217,8 +217,8 @@ class WindShifts:
             speed1 = np.random.normal(speeds[0], 1, 1)[0] #gen normal num from starting speed
             speed2 = np.random.normal(speeds[-1], 1, 1)[0] #gen normal num from prev speed  
             temp_speed = round((speed1+speed2)/2, 2)
-            if temp_speed < 0:
-                temp_speed = 0
+            if temp_speed <= 0:
+                temp_speed = round(np.random.uniform(low=0.01, high=0.1), 2)
             speeds.append(temp_speed)
 ############################################################################### 
 
