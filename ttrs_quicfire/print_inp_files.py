@@ -481,27 +481,31 @@ def print_topo_inp(flat):
             input_file.write("3              !Preconditioning\n")
 
 #Finish building
-def build_parabolic_dz_array(nz=22, Lz=350, n_surf=4, dz_surf=2.5):
+def build_parabolic_dz_array(nz=22, Lz=350, n_surf=5, dz_surf=1):
+    dz_high = Lz - dz_surf * n_surf
+    dz_low = 0
+    z_temp = nz * dz_surf
     dz = np.zeros(nz)
-    dz_high = Lz-dz_surf*n_surf
-    dz_low= 0
-    z_temp = nz*dz_surf
-    while abs(1-(z_temp/Lz))>0.001:
-        dz_max = 1/2(dz_low+dz_high)
-        c1=(dz_max-dz_surf)/(nz-n_surf )^2 
-        c2=-2*c1*n_surf
-        c3=dz_surf+c1*n_surf^2
-        
-        dz[0:n_surf]=dz_surf
-        
-        for k in range(n_surf,nz):
-            dz[k] = c1*k^2 + c2+k + c3   
-            
-        if z_temp>Lz:
-            dz_high=dz_max
-        elif z_temp<Lz:
-            dz_low=dz_max
+    while abs(1-(z_temp/Lz) > 0.001):
+        dz_max = 1/2(dz_low + dz_high)
+        c1 = (dz_max - dz_surf)/(nz-n_surf)^2
+        c2 = -2 * c1 * n_surf
+        c3 = dz_surf + c1 * n_surf^2
+
+        dz[0:n_surf] = dz_surf
+
+        for k in range(n_surf, nz):
+            dz[k] = (c1 * k^2) + (c2 * k) + c3
+
+        z_temp = sum(dz)
+
+        if z_temp > Lz:
+            dz_high = dz_max
+        elif z_temp < Lz:
+            dz_low = dz_max
         else:
             break
+
+    return dz
             
         
