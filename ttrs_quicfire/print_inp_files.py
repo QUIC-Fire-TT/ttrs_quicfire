@@ -29,7 +29,7 @@ def main(qf_arrs):
     print_rasterorigin_txt()
     print_Runtime_Advanced_User_Inputs_inp()
     print_sensor1_inp(wind)
-    print_topo_inp(flat=True)
+    print_topo_inp(flat=not qf_arrs.use_topo)
     
     src = dom.ToCopy
     dst = QF_PATH
@@ -474,8 +474,9 @@ def print_topo_inp(flat):
             input_file.write("!Relative filepath to topo .dat file (ex:: \"../path/to/topo.dat\")\n")
             input_file.write("\"topo.dat\"\n")
             input_file.write("5              !Topo flag 0:Flat 1:Gaussian Hill 3:Constant slope with flat section 5:Custom .dat\n")
-            input_file.write("0              !Smoothing Flag\n")
-            input_file.write("2500            !Total startup iterations\n")
+            input_file.write("1              !Smoothing Flag\n")
+            input_file.write("1               !# of Smoothing iterations\n")
+            input_file.write("1500            !Total startup iterations\n")
             input_file.write("500              !Iteration Reset Period\n")
             input_file.write("3              !Preconditioning\n")
 
