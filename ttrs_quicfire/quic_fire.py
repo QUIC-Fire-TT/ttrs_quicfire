@@ -138,7 +138,11 @@ class QF_Fuel_Arrays:
             wetlands = bs.load_shapefile(wetlands_path)
         except FileNotFoundError as e:
             print('[Error] File wetlands.shp not found, cannot run mod_wetlands()')
-            return
+            answer = input('Continue building? (y/n) ')
+            if answer[0].lower() == 'y':
+                return
+            else:
+                sys.exit()
         wetlands = bs.clip_to_bbox(wetlands, bbox_path)
         
         # Ensure burn plot is a ploygon
@@ -181,8 +185,8 @@ class QF_Fuel_Arrays:
         try:
             fuelbreak = bs.load_shapefile(fb_path)
         except:
-            print('File burn_plot.shp not found, cannot run build_fuelbreak()')
-            return
+            print('[Error] File burn_plot.shp not found, cannot run build_fuelbreak().\n')
+
         if isinstance(fuelbreak.iloc[0]['geometry'], Polygon):
             fuelbreak = bs.polygon_to_linestring(fuelbreak)
             #fuelbreak.to_file(os.path.join(self.dom.shape_paths.SHAPE_PATH, "TEST.shp"))
@@ -395,8 +399,12 @@ def print_ignite_dat(QF_PATH, df):
 
 ###############################################################################   
 ###Functions for building QF_Domain Parameters
-def dom_from_burn_plot(shape_paths, buffer=30, QF_PATH='default'):  
-    dom = bs.boundingbox(shape_paths, buffer, QF_PATH)
+def dom_from_burn_plot(shape_paths, buffer=30, QF_PATH='default'):
+    try:  
+        dom = bs.boundingbox(shape_paths, buffer, QF_PATH)
+    except:
+        print('[Error] File burn_plot.shp not found. Cannot build input files.')
+        sys.exit()
     return dom
 ###############################################################################
 
