@@ -25,7 +25,7 @@ def main(qf_arrs):
     print_QU_fileoptions_inp()
     print_QU_metparams_inp()
     print_QU_movingcoords_inp()
-    print_QU_simparams_inp(dom, wind)
+    print_QU_simparams_inp(dom, wind, qf_arrs)
     print_rasterorigin_txt()
     print_Runtime_Advanced_User_Inputs_inp()
     print_sensor1_inp(wind)
@@ -287,7 +287,7 @@ def print_QU_movingcoords_inp():
         input_file.write("1488795000	0	0	0	0\n")
 
 
-def print_QU_simparams_inp(dom, wind):
+def print_QU_simparams_inp(dom, wind, qf_arrs):
     with open('QU_simparams.inp', 'w') as input_file:
         input_file.write("!QUIC 6.26\n")
         input_file.write("{} !nx - Domain Length(X) Grid Cells\n".format(dom.nx))
@@ -296,10 +296,18 @@ def print_QU_simparams_inp(dom, wind):
         input_file.write("{} !dx (meters)\n".format(dom.dx))
         input_file.write("{} !dy (meters)\n".format(dom.dy))
         input_file.write("3 !Vertical stretching flag(0=uniform,1=custom,2=parabolic Z,3=parabolic DZ,4=exponential)\n")
-        input_file.write("1.500000 !Surface dz (meters)\n")
-        input_file.write("4 !Number of uniform surface cells\n")
+        input_file.write("1.000000 !Surface dz (meters)\n")
+        input_file.write("5 !Number of uniform surface cells\n")
         input_file.write("!dz array (meters)\n")
-        dz_array = build_parabolic_dz_array(nz=22, Lz=350, n_surf=5, dz_surf=1)
+        fuel_height = qf_arrs.rhof.max()
+        relief = 0
+        if qf_arrs.use_topo:
+            relief = qf_arrs.topo.max() - qf_arrs.topo.min()
+        if (relief * 3) > 100:
+            height = fuel_height + (relief * 3)
+        else:
+            height = fuel_height + 100  
+        dz_array = build_parabolic_dz_array(nz=22, Lz=height, n_surf=5, dz_surf=1)
         for dz in dz_array:
             input_file.write("{}\n".format(dz))
         input_file.write("{} !total time increments\n".format(len(wind.times)))
