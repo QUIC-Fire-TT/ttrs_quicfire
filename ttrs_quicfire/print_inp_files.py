@@ -460,7 +460,7 @@ def build_parabolic_dz_array(nz=22, Lz=350, n_surf=5, dz_surf=1):
         dz[0:n_surf] = dz_surf
 
         for k in range(n_surf, nz):
-            dz[k] = (c1 * k ** 2) + (c2 * k) + c3
+            dz[k] = round((c1 * k ** 2) + (c2 * k) + c3, 2)
 
         z_temp = sum(dz)
 
