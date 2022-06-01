@@ -321,8 +321,8 @@ def print_QU_simparams_inp(dom, wind, qf_arrs):
         else:
             height = fuel_height + 100  
         dz_array = build_parabolic_dz_array(nz=22, Lz=height, n_surf=5, dz_surf=1)
-        for dz in dz_array:
-            input_file.write("{}\n".format(dz))
+        for z_temp in dz_array:
+            input_file.write("{}\n".format(z_temp))
         input_file.write("{} !total time increments\n".format(len(wind.times)))
         input_file.write("0 !UTC conversion\n")
         input_file.write("!Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n")
