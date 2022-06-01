@@ -6,7 +6,7 @@ Created on Thu Apr  7 12:32:10 2022
 """
 
 from distutils.dir_util import copy_tree
-import os
+import os, sys
 import numpy as np
 
 def main(qf_arrs):
@@ -299,7 +299,20 @@ def print_QU_simparams_inp(dom, wind, qf_arrs):
         input_file.write("1.000000 !Surface dz (meters)\n")
         input_file.write("5 !Number of uniform surface cells\n")
         input_file.write("!dz array (meters)\n")
-        fuel_height = qf_arrs.rhof.max()
+        fuel_height = 0
+        found = True
+        for k in range(len(qf_arrs.rhof)):
+            if not found:
+                break
+            found = False
+            for i in range(len(qf_arrs.rhof[0][0])):
+                for j in range(len(qf_arrs.rhof[0])):
+                    if qf_arrs.rhof[k][j][i] != 0:
+                        fuel_height = k
+                        found = True
+                        break
+                if found:
+                    break
         relief = 0
         if qf_arrs.use_topo:
             relief = qf_arrs.topo.max() - qf_arrs.topo.min()
