@@ -299,16 +299,22 @@ def print_QU_simparams_inp(dom, wind, qf_arrs):
         input_file.write("1.000000 !Surface dz (meters)\n")
         input_file.write("5 !Number of uniform surface cells\n")
         input_file.write("!dz array (meters)\n")
+        ####Fix:
+            #This is currently giving the max bulk density value in the array
+            #I'd like it to be the height of the tallest tree
+            #Best solution is probabaly to iterate through the dz-layers (qf_arrs.rhof[dz,dy,dx])
+            #and track the heighest layer to contain fuel
         fuel_height = qf_arrs.rhof.max()
+        ####
         relief = 0
         if qf_arrs.use_topo:
             relief = qf_arrs.topo.max() - qf_arrs.topo.min()
-        if (relief * 3) > 100:
+        if (relief * 3) > (fuel_height + 100):
             height = fuel_height + (relief * 3)
         else:
             height = fuel_height + 100  
         dz_array = build_parabolic_dz_array(nz=22, Lz=height, n_surf=5, dz_surf=1)
-        for dz in dz_array:
+        for z_temp in dz_array:
             input_file.write("{}\n".format(dz))
         input_file.write("{} !total time increments\n".format(len(wind.times)))
         input_file.write("0 !UTC conversion\n")
