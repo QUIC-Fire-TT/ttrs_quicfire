@@ -28,7 +28,7 @@ a new report and link the closed report.
 #### How do I Submit a Good Bug Report?
 When writing your bug report use this 
 [template](https://github.com/QUIC-Fire-TT/ttrs_quicfire/issues/new?assignees=&labels=&template=bug_report.md&title=)
-and try and include the following things.
+and try and include the following things:
 
 * **Use a clear and descriptive title.**
 * **Describe the exact steps to reproduce the probelm** in as much detail 
@@ -62,7 +62,7 @@ new one.
 #### How do I Submit a Good Feature Request?
 When writing your feature request use this 
 [template](https://github.com/QUIC-Fire-TT/ttrs_quicfire/issues/new?assignees=&labels=&template=feature_request.md&title=)
-and try and include the following things.
+and try and include the following things:
 
 * **Use a clear and descriptive title.**
 * **Provide a step-by-step description of the feature** in as much detail as possible.
@@ -77,17 +77,17 @@ To get started, follow the
 [installation instructions](https://github.com/QUIC-Fire-TT/ttrs_quicfire/wiki/Installation).
 Once you have the library up and running, you can copy the code to your local
 machine in your normal development workspace. Once you have the code copied you
-can start writing code and test it in one of two ways. Each way relies on a project being
-setup that can be tested on. You can find instructions for setting up a project
+can start writing code and test it. In order to test your code, you need to setup a project
+You can find instructions for setting up a project
 [here](https://github.com/QUIC-Fire-TT/ttrs_quicfire/wiki/ttrs_quicfire-Quick-Start).
 
-The first way is using ```pip install```. From your local repository, run the following
-command each time a change is made:
+When you make changes you will need to use ```pip install``` for them to work locally. 
+From your local repository, run the following command each time a change is made:
 ```console
 (fastfuels) system:ttrs_quicfire user$ pip install .
 ```
 
-The second way is to use ```setup tools``` development mode. To set this up, run the
+<!-- The second way is to use ```setup tools``` development mode. To set this up, run the
 following command in your local repository:
 ```console
 (fastfuels) system:ttrs_quicfire user$ setup.py develop
@@ -97,6 +97,29 @@ When you are done, you can use this command to switch out of develop mode and us
 installed version of ttrs_quicfire:
 ```console
 (fastfuels) system:ttrs_quicfire user$ setup.py develop --uninstall
-```
+``` -->
 
-<Pull Requests>
+Be sure to utilize git's branch system as you won't be able to push to the ```main```
+branch without a [pull request](https://github.com/QUIC-Fire-TT/ttrs_quicfire/blob/main/CONTRIBUTING.md#Pull-Requests). 
+
+### Pull Requests
+This section will outline how to create a pull request for this repository.
+Following these guidelines will make it easier for us to under your changes
+and will increase the likelihood of an accepted request.
+
+#### How do I Submit a Good Pull Request?
+You can open a pull request [here](https://github.com/QUIC-Fire-TT/ttrs_quicfire/pulls).
+When writing your pull request use this 
+[template](https://github.com/QUIC-Fire-TT/ttrs_quicfire/tree/main/.github/pull_requset_template.md)
+and try and include the following things:
+
+* **Use a clear and descriptive title.**
+* **Provide a step-by-step description of the feature** in as much detail as possible.
+* **Provide the context and motivation of the feature.** Why it was made and why it
+is useful to the user.
+* **Provide details on the intended output for the feature** along with the test cases.
+* **Include any screenshots that may help.**
+
+Finally, ensure the checklist is complete and you are ready to make the pull request!
+It will be reviewed shortly after you submitted and will either be accepted or
+we will ask for clarification or fixes if anything is confusing or broken.
