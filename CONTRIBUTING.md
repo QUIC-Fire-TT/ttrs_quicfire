@@ -101,6 +101,9 @@ installed version of ttrs_quicfire:
 
 Be sure to utilize git's branch system as you won't be able to push to the ```main```
 branch without a [pull request](https://github.com/QUIC-Fire-TT/ttrs_quicfire/blob/main/CONTRIBUTING.md#Pull-Requests). 
+Each branch should only contain one feature and a pull request should only be
+made once the feature is ready. Once the branch is merged it will be deleted
+on the remote repository.
 
 ### Pull Requests
 This section will outline how to create a pull request for this repository.
@@ -109,8 +112,9 @@ and will increase the likelihood of an accepted request.
 
 #### How do I Submit a Good Pull Request?
 You can open a pull request [here](https://github.com/QUIC-Fire-TT/ttrs_quicfire/pulls).
+Be sure to link the branch the feature is on that you wish to merge.
 When writing your pull request use this 
-[template](https://github.com/QUIC-Fire-TT/ttrs_quicfire/tree/main/.github/pull_requset_template.md)
+[template](https://github.com/QUIC-Fire-TT/ttrs_quicfire/blob/main/.github/pull_request_template.md)
 and try and include the following things:
 
 * **Use a clear and descriptive title.**
