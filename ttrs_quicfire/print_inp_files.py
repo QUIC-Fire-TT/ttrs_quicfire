@@ -6,7 +6,7 @@ Created on Thu Apr  7 12:32:10 2022
 """
 
 from distutils.dir_util import copy_tree
-import os
+import os, sys
 import numpy as np
 
 def main(qf_arrs):
@@ -25,11 +25,11 @@ def main(qf_arrs):
     print_QU_fileoptions_inp()
     print_QU_metparams_inp()
     print_QU_movingcoords_inp()
-    print_QU_simparams_inp(dom, wind)
+    print_QU_simparams_inp(dom, wind, qf_arrs)
     print_rasterorigin_txt()
     print_Runtime_Advanced_User_Inputs_inp()
     print_sensor1_inp(wind)
-    print_topo_inp(flat=True)
+    print_topo_inp(flat=not qf_arrs.use_topo)
     
     src = dom.ToCopy
     dst = QF_PATH
@@ -205,27 +205,11 @@ def print_QUIC_fire_inp(dom):
         input_file.write("4					! After how many fire time steps to average emissions and radiation\n")
         input_file.write("2					! After how many quic updates to print out averaged wind-related files\n")
         input_file.write("! FIRE GRID\n")
-        # input_file.write("{}					! Number of vertical layers of fire grid cells (integer)\n".format(dom.nz))
-        # input_file.write("1					! x - fire grid ratio = (QUIC-URB cell size)/(fire cell size), integer, can only be >= 1\n")
-        # input_file.write("1					! y - fire grid ratio = (QUIC-URB cell size)/(fire cell size), integer, can only be >= 1\n")
-        # input_file.write("0					! Vertical stretching flag: 0 = uniform dz, 1 = custom\n")
-        # input_file.write("1.0\n")
-        input_file.write("12					! Number of vertical layers of fire grid cells (integer)\n")
+        input_file.write("{}					! Number of vertical layers of fire grid cells (integer)\n".format(dom.nz))
         input_file.write("1					! x - fire grid ratio = (QUIC-URB cell size)/(fire cell size), integer, can only be >= 1\n")
         input_file.write("1					! y - fire grid ratio = (QUIC-URB cell size)/(fire cell size), integer, can only be >= 1\n")
-        input_file.write("1					! Vertical stretching flag: 0 = uniform dz, 1 = custom\n")
+        input_file.write("0					! Vertical stretching flag: 0 = uniform dz, 1 = custom\n")
         input_file.write("1.0\n")
-        input_file.write("1.0\n")
-        input_file.write("1.0\n")
-        input_file.write("1.0\n")
-        input_file.write("1.0\n")
-        input_file.write("1.0\n")
-        input_file.write("2.5\n")
-        input_file.write("2.5\n")
-        input_file.write("5\n")
-        input_file.write("5\n")
-        input_file.write("10\n")
-        input_file.write("10\n")
         input_file.write("! FOLDER OF TREES AND IGNITION FILES (full path, empty line if none) -- USE FILE SEPARATOR AT THE END\n")
         input_file.write("\"\"\n")
         input_file.write("1			! 1 = all fuels in one file, 2 = separate files\n")
@@ -303,7 +287,7 @@ def print_QU_movingcoords_inp():
         input_file.write("1488795000	0	0	0	0\n")
 
 
-def print_QU_simparams_inp(dom, wind):
+def print_QU_simparams_inp(dom, wind, qf_arrs):
     with open('QU_simparams.inp', 'w') as input_file:
         input_file.write("!QUIC 6.26\n")
         input_file.write("{} !nx - Domain Length(X) Grid Cells\n".format(dom.nx))
@@ -312,31 +296,23 @@ def print_QU_simparams_inp(dom, wind):
         input_file.write("{} !dx (meters)\n".format(dom.dx))
         input_file.write("{} !dy (meters)\n".format(dom.dy))
         input_file.write("3 !Vertical stretching flag(0=uniform,1=custom,2=parabolic Z,3=parabolic DZ,4=exponential)\n")
-        input_file.write("1.500000 !Surface dz (meters)\n")
-        input_file.write("4 !Number of uniform surface cells\n")
+        input_file.write("1.000000 !Surface dz (meters)\n")
+        input_file.write("5 !Number of uniform surface cells\n")
         input_file.write("!dz array (meters)\n")
-        input_file.write("1\n")
-        input_file.write("1.5\n")
-        input_file.write("1.75\n")
-        input_file.write("2\n")
-        input_file.write("2.25\n")
-        input_file.write("2.5\n")
-        input_file.write("2.75\n")
-        input_file.write("3\n")
-        input_file.write("3.25\n")
-        input_file.write("3.5\n")
-        input_file.write("3.75\n")
-        input_file.write("4\n")
-        input_file.write("4.5\n")
-        input_file.write("5.5\n")
-        input_file.write("7\n")
-        input_file.write("8.5\n")
-        input_file.write("10\n")
-        input_file.write("11.5\n")
-        input_file.write("13\n")
-        input_file.write("26\n")
-        input_file.write("70\n")
-        input_file.write("140\n")
+        fuel_height = 0
+        for k in range(len(qf_arrs.rhof)):
+            if np.max(qf_arrs.rhof[k]) != 0:
+                fuel_height = k+1
+        relief = 0
+        if qf_arrs.use_topo:
+            relief = qf_arrs.topo.max() - qf_arrs.topo.min()
+        if (relief * 3) > 100:
+            height = fuel_height + (relief * 3)
+        else:
+            height = fuel_height + 100  
+        dz_array = build_parabolic_dz_array(nz=22, Lz=height, n_surf=5, dz_surf=1)
+        for z_temp in dz_array:
+            input_file.write("{}\n".format(z_temp))
         input_file.write("{} !total time increments\n".format(len(wind.times)))
         input_file.write("0 !UTC conversion\n")
         input_file.write("!Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n")
@@ -474,33 +450,38 @@ def print_topo_inp(flat):
             input_file.write("!Relative filepath to topo .dat file (ex:: \"../path/to/topo.dat\")\n")
             input_file.write("\"topo.dat\"\n")
             input_file.write("5              !Topo flag 0:Flat 1:Gaussian Hill 3:Constant slope with flat section 5:Custom .dat\n")
-            input_file.write("0              !Smoothing Flag\n")
-            input_file.write("2500            !Total startup iterations\n")
+            input_file.write("1              !Smoothing Flag\n")
+            input_file.write("1               !# of Smoothing iterations\n")
+            input_file.write("1500            !Total startup iterations\n")
             input_file.write("500              !Iteration Reset Period\n")
             input_file.write("3              !Preconditioning\n")
 
 #Finish building
-def build_parabolic_dz_array(nz=22, Lz=350, n_surf=4, dz_surf=2.5):
+def build_parabolic_dz_array(nz=22, Lz=350, n_surf=5, dz_surf=1):
+    dz_high = Lz - dz_surf * n_surf
+    dz_low = 0
+    z_temp = nz * dz_surf
     dz = np.zeros(nz)
-    dz_high = Lz-dz_surf*n_surf
-    dz_low= 0
-    z_temp = nz*dz_surf
-    while abs(1-(z_temp/Lz))>0.001:
-        dz_max = 1/2(dz_low+dz_high)
-        c1=(dz_max-dz_surf)/(nz-n_surf )^2 
-        c2=-2*c1*n_surf
-        c3=dz_surf+c1*n_surf^2
-        
-        dz[0:n_surf]=dz_surf
-        
-        for k in range(n_surf,nz):
-            dz[k] = c1*k^2 + c2+k + c3   
-            
-        if z_temp>Lz:
-            dz_high=dz_max
-        elif z_temp<Lz:
-            dz_low=dz_max
+    while abs(1-(z_temp/Lz)) > 0.001:
+        dz_max = 1/2 * (dz_low + dz_high)
+        c1 = (dz_max - dz_surf)/(nz-n_surf) ** 2
+        c2 = -2 * c1 * n_surf
+        c3 = dz_surf + c1 * n_surf ** 2
+
+        dz[0:n_surf] = dz_surf
+
+        for k in range(n_surf, nz):
+            dz[k] = round((c1 * k ** 2) + (c2 * k) + c3, 2)
+
+        z_temp = sum(dz)
+
+        if z_temp > Lz:
+            dz_high = dz_max
+        elif z_temp < Lz:
+            dz_low = dz_max
         else:
             break
+
+    return dz
             
         

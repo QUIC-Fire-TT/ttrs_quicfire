@@ -7,7 +7,7 @@ Created on Wed Mar 23 10:21:07 2022
 
 from scipy.io import FortranFile
 
-def fort_import(domain,dat_str):
+def fort_import(domain,dat_str,three_axis=True):
     '''
     Importing GFortran Unformatted data into 
     # https://symbols.hotell.kau.se/2017/06/04/io-fortran-python/
@@ -19,7 +19,10 @@ def fort_import(domain,dat_str):
     #print ('----- IMPORTING BULK DENSITY -----')
     data = FortranFile(dat_str,'r','uint32')
     data = data.read_ints('float32').T
-    data = data.reshape(domain.nz,domain.ny,domain.nx)
+    if three_axis:
+        data = data.reshape(domain.nz,domain.ny,domain.nx)
+    else:
+        data = data.reshape(1, domain.ny, domain.nx)
     
     return data
 

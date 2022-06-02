@@ -91,7 +91,7 @@ class QF_Fuel_Arrays:
     """
     Class contains domain parameters
     """
-    def __init__(self, domain, FUEL_PATH): 
+    def __init__(self, domain, FUEL_PATH, use_topo=True): 
         self.dom = domain
         self.rhof = dat.fort_import(domain, os.path.join(FUEL_PATH, 'bulk_density.dat'))
         self.rhof_name = 'bulk_density.dat'
@@ -99,14 +99,20 @@ class QF_Fuel_Arrays:
         self.moist_name = 'moisture.dat'
         self.depth = dat.fort_import(domain,  os.path.join(FUEL_PATH, 'depth.dat'))
         self.depth_name = 'depth.dat'
-        self.fuel_arrs = [self.rhof,self.moist,self.depth]
-        self.name_arrs = [self.rhof_name,self.moist_name,self.depth_name]
+        self.topo = dat.fort_import(domain, os.path.join(FUEL_PATH, 'topo.dat'), False)
+        self.topo_name = 'topo.dat'
+        self.use_topo = use_topo
+        self.fuel_arrs = [self.rhof,self.moist,self.depth,self.topo]
+        self.name_arrs = [self.rhof_name,self.moist_name,self.depth_name,self.topo_name]
     
     def export_fuel(self, QF_PATH='default'):
         QF_PATH = self.dom.QF_PATH
-        for i,f_arr in enumerate(self.fuel_arrs):
+        for i,f_arr in enumerate(self.fuel_arrs[:-1]):
             file_loc = os.path.join(QF_PATH, self.name_arrs[i])
             dat.fort_export(f_arr, file_loc)
+        if self.use_topo:
+            file_loc = os.path.join(QF_PATH, self.name_arrs[-1])
+            dat.fort_export(self.fuel_arrs[-1], file_loc)
 
     def update_surface_moisture(self, moist_in_plot=0.1, moist_out_plot='default'):
         '''
@@ -411,10 +417,10 @@ def dom_from_burn_plot(shape_paths, buffer=30, QF_PATH='default'):
 
 ###############################################################################
 ###Functions for build qf_arrs (Fuel Domains)
-def build_ff_domain(dom, FUEL_PATH = 'default', FF_request=True):
+def build_ff_domain(dom, FUEL_PATH = 'default', FF_request=True, use_topo=True):
     if FUEL_PATH=='default':
         FUEL_PATH = default_path('FF_Fuel')
-    qf_arrs = FF.build_ff_domain(dom, FUEL_PATH, FF_request)
+    qf_arrs = FF.build_ff_domain(dom, FUEL_PATH, FF_request, use_topo)
     return qf_arrs
 ###############################################################################
 
