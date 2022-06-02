@@ -203,9 +203,10 @@ class QF_Fuel_Arrays:
         msk = self.mask_from_shape(fuelbreak)
 
         for f_arr in self.fuel_arrs:
-            for z in range(f_arr.shape[0]):
-                z_layer = f_arr[z,:,:]
-                z_layer[~msk] = 0
+            if f_arr is not self.topo:
+                for z in range(f_arr.shape[0]):
+                    z_layer = f_arr[z,:,:]
+                    z_layer[~msk] = 0
     
     def calc_normal_windfield(self, start_speed, start_dir, shift_int=300):
         sim_time = self.dom.sim_time

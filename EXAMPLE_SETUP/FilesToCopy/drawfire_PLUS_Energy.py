@@ -540,7 +540,8 @@ def plot_outputs(qu, qf, ignitions, flags, fb, ui):
                 max_power[indexes] = var[indexes]
             plot_totals(max_power,"Max Power","Power [kW/m^2]", qf.horizontal_extent, save_dir, img_specs, qf)
             plot_intensity(max_power,"Intensity","Intensity", qf.horizontal_extent, save_dir, img_specs, qf)
-        except: continue
+        except: 
+            print("No surface energy outputs were found.")
     
     
     ##OLD methodology doesn't average the power values
