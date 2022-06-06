@@ -260,6 +260,7 @@ def atv_ignition(dom, wind_dir, num_ignitors = 3, line_space_chain = 1,
     dash_int_m = chain2meter(dash_int_chain)
     dot_int_m = chain2meter(dot_int_chain)
     
+    build_black_lines = bs.build_black(shape_paths, line_space_m, wind_dir=wind_dir)
     ignition_lines = bs.build_ig_lines(shape_paths, line_space_m, wind_dir=wind_dir)
     ignition_lines = ignition_lines.sort_values('Dist', ascending=True)
     
@@ -294,11 +295,15 @@ def atv_ignition(dom, wind_dir, num_ignitors = 3, line_space_chain = 1,
         
     #Save shapefile
     ignition_lines.to_file(os.path.join(shape_paths.SHAPE_PATH, 'ig_lines.shp'))
+    shape_paths.ignitions = os.path.join(shape_paths.SHAPE_PATH, 'ig_lines.shp')
     if ig_type == 'strip':
         df_ig_points = bs.line_to_points_to_df(dom, ignition_lines, spacing=4)
 
     elif ig_type == 'dot':
         df_ig_points = bs.line_to_points_to_df(dom, ignition_lines, spacing=dot_int_m)
+
+    # Save Build Black Shapefile
+    build_black_lines.to_file(os.path.join(shape_paths.SHAPE_PATH, 'build_black.shp'))
         
     gen_ig_times(dom, df_ig_points, ADD_TIME_AFTER_LAST_IG, SPEED_OF_IGNITION)
 
