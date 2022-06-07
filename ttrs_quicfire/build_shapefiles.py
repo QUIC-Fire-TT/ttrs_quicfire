@@ -73,7 +73,7 @@ def polygon_to_linestring(gdf):
 def build_ig_lines(shape_paths, spacing, wind_dir):
     bbox = load_shapefile(shape_paths.bbox)
     burnplt = load_shapefile(shape_paths.burn_plot)
-    # Ensure burn plot is a ploygon
+    # Ensure burn plot is a polygon
     if isinstance(burnplt.iloc[0]['geometry'], LineString):
         burnplt = linestring_to_polygon(burnplt)
 
@@ -282,7 +282,7 @@ def line_to_points_to_df(dom, ignition_lines, spacing=4):
         line_geo = line['geometry']
         distance_delta = spacing #Distance in meters
         distances = np.arange(0, line_geo.length, distance_delta)
-        points = [line_geo.interpolate(distance) for distance in distances] + [line_geo.boundary[1]]
+        points = [line_geo.interpolate(distance) for distance in distances] + [line_geo.boundary.geoms[1]]
         temp_dict = {'geometry':points}
         for k in line.keys():
             if k != 'geometry':
