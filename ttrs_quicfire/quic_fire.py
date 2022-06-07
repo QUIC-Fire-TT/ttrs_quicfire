@@ -20,6 +20,7 @@ import pandas as pd
 from rasterio.features import geometry_mask
 import sys
 from shapely.geometry import Polygon, LineString
+import matplotlib.pyplot as plt
 
 ###############################################################################   
 ###Classes
@@ -228,12 +229,10 @@ class QF_Fuel_Arrays:
         build_black_lines = build_black_lines.buffer(-5, single_sided=True)
         build_black_lines = bs.clip_to_bbox(build_black_lines, bbox_path)
         msk = self.mask_from_shape(build_black_lines)
-
+        
         for f_arr in self.fuel_arrs:
-            print(f_arr.shape[0])
-            for z in range(f_arr.shape[0]):
-                z_layer = f_arr[z,:,:]
-                z_layer[~msk] = 0
+            layer = f_arr[0,:,:]
+            layer[~msk] = 0
     
     def calc_normal_windfield(self, start_speed, start_dir, shift_int=300):
         sim_time = self.dom.sim_time
