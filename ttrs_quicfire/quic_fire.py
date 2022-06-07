@@ -206,6 +206,34 @@ class QF_Fuel_Arrays:
             for z in range(f_arr.shape[0]):
                 z_layer = f_arr[z,:,:]
                 z_layer[~msk] = 0
+
+    def build_black(self, wind_dir, shape_path='default', ring_thetas=[0.0, 360.0]):
+        """
+        Builds a fuel break into the unit on the downwind side.
+        Input:
+            wind_dir = the initial direction of the wind
+        """
+        if shape_path=='default':
+            shape_paths = self.dom.shape_paths
+        else:
+            shape_paths = shape_path
+        
+        bbox_path = shape_paths.bbox
+        build_black_lines = bs.build_black(shape_paths, wind_dir=wind_dir, ring_thetas=ring_thetas)
+
+        if isinstance(build_black_lines.iloc[0]['geometry'], Polygon):
+            build_black_lines = bs.polygon_to_linestring(build_black_lines)
+        
+        build_black_lines = bs.clip_to_bbox(build_black_lines, bbox_path)
+        build_black_lines = build_black_lines.buffer(-5, single_sided=True)
+        build_black_lines = bs.clip_to_bbox(build_black_lines, bbox_path)
+        msk = self.mask_from_shape(build_black_lines)
+
+        for f_arr in self.fuel_arrs:
+            print(f_arr.shape[0])
+            for z in range(f_arr.shape[0]):
+                z_layer = f_arr[z,:,:]
+                z_layer[~msk] = 0
     
     def calc_normal_windfield(self, start_speed, start_dir, shift_int=300):
         sim_time = self.dom.sim_time
@@ -261,7 +289,7 @@ def atv_ignition(dom, wind_dir, num_ignitors = 3, line_space_chain = 1,
     dot_int_m = chain2meter(dot_int_chain)
     
     # For Building an ignition file with burning black
-    #build_black_lines = bs.build_black(shape_paths, line_space_m, wind_dir=wind_dir, ring_thetas=[80.0, 130.0])
+    #build_black_lines = bs.build_black(shape_paths, wind_dir=wind_dir, ring_thetas=[80.0, 130.0])
     ignition_lines = bs.build_ig_lines(shape_paths, line_space_m, wind_dir=wind_dir)
     ignition_lines = ignition_lines.sort_values('Dist', ascending=True)
     

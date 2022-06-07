@@ -272,7 +272,7 @@ def build_ig_lines(shape_paths, spacing, wind_dir):
     #ignition.to_file(os.path.join(shape_paths.SHAPE_PATH, 'ig_lines_after.shp'))
     return ignition
 
-def build_black(shape_paths, spacing, wind_dir, ring_thetas=[0.0, 360.0]):
+def build_black(shape_paths, wind_dir, ring_thetas=[0.0, 360.0]):
     burnplt = load_shapefile(shape_paths.burn_plot)
     # Ensure burn plot is a ploygon
     if isinstance(burnplt.iloc[0]['geometry'], LineString):
