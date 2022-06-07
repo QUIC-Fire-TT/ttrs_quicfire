@@ -306,6 +306,7 @@ def build_black(shape_paths, spacing, wind_dir, ring_thetas=[0.0, 360.0]):
     scannulus = gpd.GeoDataFrame(index=[0], geometry=[scannulus])
     # Clip the line ignition to teh scan_wedge
     partial_border = gpd.clip(ignitions, scannulus)
+    partial_border['Length'] = partial_border.geometry.length
 
     return partial_border
 
