@@ -253,7 +253,8 @@ def print_QU_fileoptions_inp():
         input_file.write("0   !flag to write out the file uosensorfield.dat, the initial sensor velocity field (1=write,0=no write)\n")
         input_file.write("0   !flag to write out the file QU_staggered_velocity.bin used by QUIC-Pressure(1=write,0=no write)\n")
         input_file.write("1   !Output fire energy per timestep\n")
-        input_file.write("1   !flag for automatically killing simulation once fire behavior has quit (1=on,0=off)")  
+        input_file.write("1   !flag for automatically killing simulation once fire behavior has quit (1=on,0=off)\n")  
+        input_file.write("0   !flag to output startup wind files for topo-influenced wind fields\n")  
 
 def print_QU_metparams_inp():
     with open('QU_metparams.inp', 'w') as input_file:
@@ -300,16 +301,17 @@ def print_QU_simparams_inp(dom, wind, qf_arrs):
         input_file.write("5 !Number of uniform surface cells\n")
         input_file.write("!dz array (meters)\n")
         fuel_height = 0
+        MIN_DZ_HEIGHT = 150
         for k in range(len(qf_arrs.rhof)):
             if np.max(qf_arrs.rhof[k]) != 0:
                 fuel_height = k+1
         relief = 0
         if qf_arrs.use_topo:
             relief = qf_arrs.topo.max() - qf_arrs.topo.min()
-        if (relief * 3) > 100:
+        if (relief * 3) > MIN_DZ_HEIGHT:
             height = fuel_height + (relief * 3)
         else:
-            height = fuel_height + 100  
+            height = fuel_height + relief + MIN_DZ_HEIGHT  
         dz_array = build_parabolic_dz_array(nz=22, Lz=height, n_surf=5, dz_surf=1)
         for z_temp in dz_array:
             input_file.write("{}\n".format(z_temp))

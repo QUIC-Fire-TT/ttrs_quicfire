@@ -4,7 +4,7 @@ info = open("README.md").read()
 
 setup(
     name='ttrs_quicfire',
-    version='1.0.1',
+    version='1.1.0',
     description='ttrs_quicfire is a Python library to easily configure burn models for plots of land defined using shape files for the quicfire model.',
     long_description=info,
     long_description_content_type='text/markdown',
