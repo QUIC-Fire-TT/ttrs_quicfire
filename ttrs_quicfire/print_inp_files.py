@@ -301,17 +301,17 @@ def print_QU_simparams_inp(dom, wind, qf_arrs):
         input_file.write("5 !Number of uniform surface cells\n")
         input_file.write("!dz array (meters)\n")
         fuel_height = 0
-        MIN_DZ_HEIGHT = 150
+        MIN_HEIGHT = 150
         for k in range(len(qf_arrs.rhof)):
             if np.max(qf_arrs.rhof[k]) != 0:
                 fuel_height = k+1
         relief = 0
         if qf_arrs.use_topo:
             relief = qf_arrs.topo.max() - qf_arrs.topo.min()
-        if (relief * 3) > MIN_DZ_HEIGHT:
+        if (relief * 3) > MIN_HEIGHT:
             height = fuel_height + (relief * 3)
         else:
-            height = fuel_height + relief + MIN_DZ_HEIGHT  
+            height = fuel_height + relief + MIN_HEIGHT  
         dz_array = build_parabolic_dz_array(nz=22, Lz=height, n_surf=5, dz_surf=1)
         for z_temp in dz_array:
             input_file.write("{}\n".format(z_temp))
