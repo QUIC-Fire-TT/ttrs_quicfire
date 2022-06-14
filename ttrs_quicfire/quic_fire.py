@@ -278,7 +278,7 @@ class WindShifts:
 ###Functions for building ignitions
 def atv_ignition(dom, wind_dir, num_ignitors = 3, line_space_chain = 1, 
                  ig_type='strip', dash_int_chain = 0.5, dot_int_chain = 0.25,
-                 ignitors_wait_time = 20, ignition_num_wait_time = 0,
+                 ignitors_wait_time = 20, ignition_num_wait_time = 0, ring_thetas=[0.0, 360],
                  ADD_TIME_AFTER_LAST_IG = 1800, SPEED_OF_IGNITION = 1, BURN_BLACK=False):
     """
     Need to update: only builds lines currently
@@ -296,7 +296,7 @@ def atv_ignition(dom, wind_dir, num_ignitors = 3, line_space_chain = 1,
     else: ig_dirs = ('E-W','W-E')
 
     if BURN_BLACK:
-        build_black_lines = bs.build_black(shape_paths, wind_dir=wind_dir, ring_thetas=[80.0, 130.0])
+        build_black_lines = bs.build_black(shape_paths, wind_dir=wind_dir, ring_thetas=ring_thetas)
 
         build_black_lines['Ig_Num'] = 0
         build_black_lines['ATV_Num'] = 0
