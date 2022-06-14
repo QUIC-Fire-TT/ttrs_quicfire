@@ -6,8 +6,6 @@ Created on Wed Mar 23 10:10:35 2022
 """
 
 #TT Libraries
-from codecs import ignore_errors
-from distutils.log import debug
 import ttrs_quicfire.build_FF_domain as FF
 import ttrs_quicfire.dat_file_functions as dat
 import ttrs_quicfire.print_inp_files
@@ -21,7 +19,6 @@ import pandas as pd
 from rasterio.features import geometry_mask
 import sys
 from shapely.geometry import Polygon, LineString
-import matplotlib.pyplot as plt
 
 ###############################################################################   
 ###Classes
