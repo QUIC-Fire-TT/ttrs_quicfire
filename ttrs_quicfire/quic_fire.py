@@ -6,6 +6,7 @@ Created on Wed Mar 23 10:10:35 2022
 """
 
 #TT Libraries
+from codecs import ignore_errors
 from distutils.log import debug
 import ttrs_quicfire.build_FF_domain as FF
 import ttrs_quicfire.dat_file_functions as dat
@@ -278,7 +279,7 @@ class WindShifts:
 def atv_ignition(dom, wind_dir, num_ignitors = 3, line_space_chain = 1, 
                  ig_type='strip', dash_int_chain = 0.5, dot_int_chain = 0.25,
                  ignitors_wait_time = 20, ignition_num_wait_time = 0,
-                 ADD_TIME_AFTER_LAST_IG = 1800, SPEED_OF_IGNITION = 1):
+                 ADD_TIME_AFTER_LAST_IG = 1800, SPEED_OF_IGNITION = 1, BURN_BLACK=False):
     """
     Need to update: only builds lines currently
     """
@@ -287,14 +288,29 @@ def atv_ignition(dom, wind_dir, num_ignitors = 3, line_space_chain = 1,
     dash_int_m = chain2meter(dash_int_chain)
     dot_int_m = chain2meter(dot_int_chain)
     
-    # For Building an ignition file with burning black
-    #build_black_lines = bs.build_black(shape_paths, wind_dir=wind_dir, ring_thetas=[80.0, 130.0])
     ignition_lines = bs.build_ig_lines(shape_paths, line_space_m, wind_dir=wind_dir)
     ignition_lines = ignition_lines.sort_values('Dist', ascending=True)
     
     if (wind_dir>45 and wind_dir<=135) or (wind_dir>225 and wind_dir<=315):
         ig_dirs = ('N-S','S-N')
     else: ig_dirs = ('E-W','W-E')
+
+    if BURN_BLACK:
+        build_black_lines = bs.build_black(shape_paths, wind_dir=wind_dir, ring_thetas=[80.0, 130.0])
+
+        build_black_lines['Ig_Num'] = 0
+        build_black_lines['ATV_Num'] = 0
+        build_black_lines['Add_Time'] = 0
+        build_black_lines['Dir'] = ''
+        for i in range(len(build_black_lines)):
+            build_black_lines.Ig_Num.iloc[i] = 0
+            build_black_lines.ATV_Num.iloc[i] = 0
+            build_black_lines.Add_Time.iloc[i] = 0
+            build_black_lines.Dir.iloc[i] = ig_dirs[0]
+
+        # Save Build Black Shapefile
+        build_black_lines.to_file(os.path.join(shape_paths.SHAPE_PATH, 'build_black.shp'))
+        df_build_black = bs.line_to_points_to_df(dom, build_black_lines, spacing=4)
     
     ignition_lines['Ig_Num'] = 0
     ignition_lines['ATV_Num'] = 0
@@ -320,17 +336,6 @@ def atv_ignition(dom, wind_dir, num_ignitors = 3, line_space_chain = 1,
             temp_dir = ig_dirs[0]
         else: temp_dir = ig_dirs[1]
         ignition_lines.Dir.iloc[i] = temp_dir
-
-    # For Building an ignition file with burning black
-    # build_black_lines['Ig_Num'] = 0
-    # build_black_lines['ATV_Num'] = 0
-    # build_black_lines['Add_Time'] = 0
-    # build_black_lines['Dir'] = ''
-    # for i in range(len(build_black_lines)):
-    #     build_black_lines.Ig_Num.iloc[i] = 1
-    #     build_black_lines.ATV_Num.iloc[i] = 0
-    #     build_black_lines.Add_Time.iloc[i] = 0
-    #     build_black_lines.Dir.iloc[i] = ig_dirs[0]
         
     #Save shapefile
     ignition_lines.to_file(os.path.join(shape_paths.SHAPE_PATH, 'ig_lines.shp'))
@@ -341,12 +346,10 @@ def atv_ignition(dom, wind_dir, num_ignitors = 3, line_space_chain = 1,
     elif ig_type == 'dot':
         df_ig_points = bs.line_to_points_to_df(dom, ignition_lines, spacing=dot_int_m)
 
-    # Save Build Black Shapefile
-    # build_black_lines.to_file(os.path.join(shape_paths.SHAPE_PATH, 'build_black.shp'))
-    # df_build_black = bs.line_to_points_to_df(dom, build_black_lines, spacing=4)
-
-    # For building ignition file for building black   
-    #gen_ig_times(dom, df_build_black, ADD_TIME_AFTER_LAST_IG, SPEED_OF_IGNITION)
+    # Combines the Dataframes
+    if BURN_BLACK:
+        dfs = [df_build_black, df_ig_points]
+        df_ig_points = pd.concat(dfs, keys=['burn_black', 'ignitions'])
 
     gen_ig_times(dom, df_ig_points, ADD_TIME_AFTER_LAST_IG, SPEED_OF_IGNITION)
 
@@ -414,7 +417,7 @@ def gen_ig_times(dom, df, ADD_TIME_AFTER_LAST_IG, SPEED_OF_IGNITION):
                     atv_end_times = [] #Reset
             except: pass #at end of iteration and don't need to calc current time any more
     
-    df= pd.concat(frames)
+    df = pd.concat(frames)
     df.IgTime = df.IgTime.astype(int) #convert ignitions times to intervals
     dom.sim_time = df.IgTime.max() + ADD_TIME_AFTER_LAST_IG
     df = df.sort_values('IgTime', ascending=True) #sort by ignition time before printing
