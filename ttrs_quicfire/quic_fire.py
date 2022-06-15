@@ -209,11 +209,11 @@ class QF_Fuel_Arrays:
                     z_layer = f_arr[z,:,:]
                     z_layer[~msk] = 0
     
-    def calc_normal_windfield(self, start_speed, start_dir, shift_int=300, start_time=0):
+    def calc_normal_windfield(self, start_speed, start_dir, start_time=0, shift_int=300, SENSOR_HEIGHT=6.1):
         times = list(range(start_time, start_time + self.dom.sim_time + 1, shift_int))
-        self.wind = WindShifts(times, start_speed, start_dir)
+        self.wind = WindShifts(times, start_speed, start_dir, SENSOR_HEIGHT)
 
-    def custom_windfield(self, speeds, dirs, shift_int=300, start_time=0):
+    def custom_windfield(self, speeds, dirs, start_time=0, shift_int=300, SENSOR_HEIGHT=6.1):
         times = list(range(start_time, start_time + self.dom.sim_time + 1, shift_int))
         if len(speeds) != len(times):
             raise DataLengthMismatch('Wind Speeds', len(speeds), 'Wind Times', len(times))
@@ -225,14 +225,14 @@ class QF_Fuel_Arrays:
         for dir in dirs:
             if dir < 0 or dir >= 360:
                 raise WindDirOutOfRange(dir)
-        self.wind = WindShifts(times, speeds, dirs, build=False)
+        self.wind = WindShifts(times, speeds, dirs, SENSOR_HEIGHT, build=False)
 
 #Currently only building normal wind field around
 class WindShifts:
     """
     Class creates randomized wind field
     """
-    def __init__(self, times, speed, dir, SENSOR_HEIGHT=6.1, build=True):
+    def __init__(self, times, speed, dir, SENSOR_HEIGHT, build=True):
         self.times = times
         self.SENSOR_HEIGHT = SENSOR_HEIGHT
         if build:
