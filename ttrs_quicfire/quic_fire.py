@@ -211,13 +211,17 @@ class QF_Fuel_Arrays:
     
     def calc_normal_windfield(self, start_speed, start_dir, start_time=0, shift_int=300, SENSOR_HEIGHT=6.1):
         times = list(range(start_time, start_time + self.dom.sim_time + 1, shift_int))
+        if start_speed <= 0 or start_speed > 20:
+            raise WindSpeedOutOfRange(start_speed)
+        if start_dir < 0 or start_dir >= 360:
+            raise WindDirOutOfRange(start_dir)
         self.wind = WindShifts(times, start_speed, start_dir, SENSOR_HEIGHT)
 
     def custom_windfield(self, speeds, dirs, start_time=0, shift_int=300, SENSOR_HEIGHT=6.1):
         times = list(range(start_time, start_time + self.dom.sim_time + 1, shift_int))
         if len(speeds) != len(times):
             raise DataLengthMismatch('Wind Speeds', len(speeds), 'Wind Times', len(times))
-        elif len(dirs) != len(times):
+        if len(dirs) != len(times):
             raise DataLengthMismatch('Wind Directions', len(dirs), 'Wind Times', len(times))
         for speed in speeds:
             if speed <= 0 or speed > 20:
