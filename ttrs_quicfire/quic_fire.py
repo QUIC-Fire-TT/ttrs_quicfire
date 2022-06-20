@@ -217,8 +217,7 @@ class QF_Fuel_Arrays:
             raise WindDirOutOfRange(start_dir)
         self.wind = WindShifts(times, start_speed, start_dir, SENSOR_HEIGHT)
 
-    def custom_windfield(self, speeds, dirs, start_time=0, shift_int=300, SENSOR_HEIGHT=6.1):
-        times = list(range(start_time, start_time + self.dom.sim_time + 1, shift_int))
+    def custom_windfield(self, speeds, dirs, times, SENSOR_HEIGHT=6.1):
         if len(speeds) != len(times):
             raise DataLengthMismatch('Wind Speeds', len(speeds), 'Wind Times', len(times))
         if len(dirs) != len(times):
