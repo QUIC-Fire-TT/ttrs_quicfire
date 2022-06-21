@@ -289,11 +289,19 @@ def build_black(shape_paths, wind_dir, ring_thetas=[0.0, 360.0]):
     r_inner = np.floor(x0.distance(ignitions))
     # Set up fine mesh for scan wedge
     n_points = 128
-    angles = np.linspace(ring_thetas[0], ring_thetas[1], n_points)
-    if np.abs(ring_thetas[1] - ring_thetas[0]) == 360.0:
-        # Disconnect the ring (avoids self-intersections that crash the clip routine later on)
-        angles = angles[:-1]
     # Build a scan wedge polygon
+    if (ring_thetas[0] < ring_thetas[1]):
+        angles = np.linspace(ring_thetas[0], ring_thetas[1], n_points)
+        if np.abs(ring_thetas[1] - ring_thetas[0]) == 360.0:
+            # Disconnect the ring (avoids self-intersections that crash the clip routine later on)
+            angles = angles[:-1]
+    else:
+        angles1 = np.linspace(ring_thetas[0], 360, int(n_points/2))
+        angles1 = np.flip(angles1)
+        angles1 = angles1[:-1]
+        angles2 = np.linspace(ring_thetas[1], 0, int(n_points/2))
+        angles = np.concatenate((angles2, angles1))
+        print(angles)
     scannulus_outer = [[r_outer*np.cos(theta*np.pi/180.0)+x0.coords[0][0],
                         r_outer*np.sin(theta*np.pi/180.0)+x0.coords[0][1]] for theta in angles]
     scannulus_inner = [[r_inner*np.cos(theta*np.pi/180.0)+x0.coords[0][0],
