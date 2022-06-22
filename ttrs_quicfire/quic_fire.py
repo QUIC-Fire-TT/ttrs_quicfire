@@ -10,6 +10,7 @@ from distutils.log import debug
 import ttrs_quicfire.build_FF_domain as FF
 import ttrs_quicfire.dat_file_functions as dat
 import ttrs_quicfire.print_inp_files
+from ttrs_quicfire.exceptions import WindDirOutOfRange, WindSpeedOutOfRange, DataLengthMismatch
 
 #Standard Libraries
 #import geopandas as gpd
@@ -208,29 +209,42 @@ class QF_Fuel_Arrays:
                     z_layer = f_arr[z,:,:]
                     z_layer[~msk] = 0
     
-    def calc_normal_windfield(self, start_speed, start_dir, shift_int=300):
-        sim_time = self.dom.sim_time
-        self.wind = WindShifts(sim_time, start_speed, start_dir, shift_int)
+    def calc_normal_windfield(self, start_speed, start_dir, start_time=0, shift_int=300, SENSOR_HEIGHT=6.1):
+        times = list(range(start_time, start_time + self.dom.sim_time + 1, shift_int))
+        if start_speed <= 0 or start_speed > 20:
+            raise WindSpeedOutOfRange(start_speed)
+        if start_dir < 0 or start_dir >= 360:
+            raise WindDirOutOfRange(start_dir)
+        self.wind = WindShifts(times, start_speed, start_dir, SENSOR_HEIGHT)
+
+    def custom_windfield(self, speeds, dirs, times, SENSOR_HEIGHT=6.1):
+        if len(speeds) != len(times):
+            raise DataLengthMismatch('Wind Speeds', len(speeds), 'Wind Times', len(times))
+        if len(dirs) != len(times):
+            raise DataLengthMismatch('Wind Directions', len(dirs), 'Wind Times', len(times))
+        for speed in speeds:
+            if speed <= 0 or speed > 20:
+                raise WindSpeedOutOfRange(speed)
+        for dir in dirs:
+            if dir < 0 or dir >= 360:
+                raise WindDirOutOfRange(dir)
+        self.wind = WindShifts(times, speeds, dirs, SENSOR_HEIGHT, build=False)
 
 #Currently only building normal wind field around
 class WindShifts:
     """
     Class creates randomized wind field
     """
-    def __init__(self, sim_time, start_speed, start_dir, SENSOR_HEIGHT=6.1, shift_int=300, build=True):
+    def __init__(self, times, speed, dir, SENSOR_HEIGHT, build=True):
+        self.times = times
+        self.SENSOR_HEIGHT = SENSOR_HEIGHT
         if build:
-            self.SIM_START_TIME = 1488794400
-            self.times = list(range(1488794400,1488794400+sim_time+1,shift_int))
-            self.SENSOR_HEIGHT = 6.1 #(m) = 20 ft
-            self.dirs = [start_dir]
-            self.speeds = [start_speed]
+            self.dirs = [dir]
+            self.speeds = [speed]
             self.build_wind_field(len(self.times), self.dirs, self.speeds)
-    
         else:
-            self.times = sim_time
-            self.SENSOR_HEIGHT = SENSOR_HEIGHT  #6.1 (m) = 20 ft
-            self.dirs = start_dir
-            self.speeds = start_speed
+            self.dirs = dir
+            self.speeds = speed
     
     def build_wind_field(self, num_values, dirs, speeds):
         for i in range(1,num_values):
