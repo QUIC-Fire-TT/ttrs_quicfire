@@ -20,7 +20,7 @@ def main(qf_arrs):
     print_QFire_Bldg_Advanced_User_Inputs_inp()
     print_QFire_Plume_Advanced_User_Inputs_inp()
     print_QP_buildout_inp()
-    print_QUIC_fire_inp(dom)
+    print_QUIC_fire_inp(dom, wind)
     print_QU_buildings_inp()
     print_QU_fileoptions_inp()
     print_QU_metparams_inp()
@@ -191,12 +191,12 @@ def print_QP_buildout_inp():
         input_file.write("           0  ! total number of vegitative canopies\n")
 
 
-def print_QUIC_fire_inp(dom):
+def print_QUIC_fire_inp(dom, wind):
     with open('QUIC_fire.inp', 'w') as input_file:
         input_file.write("1					! Fire flag: 1 = for fire; 0 = no fire\n")
         input_file.write("222				! Random number generator: -1: use time and date, any other integer > 0 is used as the seed\n")
         input_file.write("! FIRE TIMES\n")
-        input_file.write("1488794400		! When the fire is ignited in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n")
+        input_file.write("{}		! When the fire is ignited in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n".format(wind.times[0]))
         input_file.write("{}    			! Total simulation time for the fire [s]\n".format(dom.sim_time))
         input_file.write("1		   		! time step for the fire simulation [s]\n")
         input_file.write("1					! Number of fire time steps done before updating the quic wind field (integer, >= 1)\n")
@@ -301,17 +301,17 @@ def print_QU_simparams_inp(dom, wind, qf_arrs):
         input_file.write("5 !Number of uniform surface cells\n")
         input_file.write("!dz array (meters)\n")
         fuel_height = 0
-        MIN_DZ_HEIGHT = 150
+        MIN_HEIGHT = 150
         for k in range(len(qf_arrs.rhof)):
             if np.max(qf_arrs.rhof[k]) != 0:
                 fuel_height = k+1
         relief = 0
         if qf_arrs.use_topo:
             relief = qf_arrs.topo.max() - qf_arrs.topo.min()
-        if (relief * 3) > MIN_DZ_HEIGHT:
+        if (relief * 3) > MIN_HEIGHT:
             height = fuel_height + (relief * 3)
         else:
-            height = fuel_height + relief + MIN_DZ_HEIGHT  
+            height = fuel_height + relief + MIN_HEIGHT  
         dz_array = build_parabolic_dz_array(nz=22, Lz=height, n_surf=5, dz_surf=1)
         for z_temp in dz_array:
             input_file.write("{}\n".format(z_temp))

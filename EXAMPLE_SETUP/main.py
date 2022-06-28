@@ -21,6 +21,7 @@ Created on Wed Mar 23 09:11:26 2022
 #Standard Libraries
 import os
 import sys
+import numpy as np
 import ttrs_quicfire as qf
 
 OG_PATH = os.getcwd()
@@ -29,11 +30,11 @@ OG_PATH = os.getcwd()
 #Track path to shapefiles that exist:
 shape_paths = qf.Shapefile_Paths()
 
-#Build domain class from shape
+###Build domain class from shape
 dom = qf.dom_from_burn_plot(shape_paths, buffer=30, QF_PATH= os.path.join(OG_PATH, 'Run'))
 
-#Build FF Fuel domain
-qf_arrs = qf.build_ff_domain(dom, FF_request=False)
+###Build FF Fuel domain
+qf_arrs = qf.build_ff_domain(dom, FF_request=True)
 #Fuel breaks
 qf_arrs.build_fuelbreak() #default build 6m fuel break around the plot
 qf_arrs.build_fuelbreak(shape_paths.streams, buffer = 1)
@@ -43,11 +44,22 @@ qf_arrs.update_surface_moisture(moist_in_plot=0.07, moist_out_plot=1)
 #Modify Wetlands
 qf_arrs.mod_wetlands(fmc=0.5, bulk_density=3)
 
-#Build ignition file and windfield
+###Build ignition file and windfield
+#Wind Option 1: Manual
+speeds = [0.1, 1, 2, 3, 2, 0.1, 1, 3, 4, 2, 1, 2]
+directions = [90, 100, 95, 90, 80, 70, 75, 80, 85, 90, 95, 100]
+times = list(range(0,(300*12),300))
 avg_wind_speed = 1.5
-avg_wind_dir = 225
+avg_wind_dir = np.average(directions)
+qf_arrs.custom_windfield(speeds=speeds, dirs=directions, times=times)
 
+#Wind Option 2: Build windfield
+# avg_wind_speed = 1.5
+# avg_wind_dir = 215
+#qf_arrs.calc_normal_windfield(start_speed = avg_wind_speed, start_dir = avg_wind_dir)
+
+#Build Ignition
 qf.atv_ignition(dom, wind_dir=avg_wind_dir, line_space_chain = 2)
-qf_arrs.calc_normal_windfield(start_speed = avg_wind_speed, start_dir = avg_wind_dir)
 
+#Build QF simulation
 qf.build_qf_run(qf_arrs)
