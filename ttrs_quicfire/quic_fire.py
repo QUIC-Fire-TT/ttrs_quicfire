@@ -402,8 +402,7 @@ def print_ignite_dat(QF_PATH, df):
     -------
     ignite.dat in QF directory
     """
-    os.chdir(QF_PATH)
-    with open('ignite.dat', 'w') as input_file:
+    with open(os.path.join(QF_PATH,'ignite.dat'), 'w') as input_file:
         input_file.write("       igntype=    4\n")
         input_file.write("    &aeriallist\n")
         input_file.write("       naerial=  {}\n".format(len(df)))

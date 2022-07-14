@@ -13,6 +13,7 @@ def main(qf_arrs):
     #Print QF input files
     dom = qf_arrs.dom
     wind = qf_arrs.wind
+    global QF_PATH
     QF_PATH = dom.QF_PATH
     qf_arrs.export_fuel()   #Export QF fuel
     print_gridlist(dom)
@@ -37,7 +38,7 @@ def main(qf_arrs):
     print("Run setup complete")
     
 def print_gridlist(dom):
-    with open('gridlist', 'w') as input_file:
+    with open(os.path.join(QF_PATH,'gridlist'), 'w') as input_file:
         input_file.write("&compresslist\n")
         input_file.write("       irst=0 nt=60000 nts=10 ntp=10\n")
         input_file.write("       nprocx=10 nprocy=20\n")
@@ -136,7 +137,7 @@ def print_gridlist(dom):
 
 
 def print_QFire_Advanced_User_Inputs_inp():
-    with open('QFire_Advanced_User_Inputs.inp', 'w') as input_file:
+    with open(os.path.join(QF_PATH,'QFire_Advanced_User_Inputs.inp'), 'w') as input_file:
         input_file.write("0.05			! N/A, fraction of the cells on fire that will launch a firebrand\n")
         input_file.write("40.			! N/A, scaling factor of the radius represented by the firebrands launched\n")
         input_file.write("1				! s, time step for the firebrands trajectory calculation\n")
@@ -153,7 +154,7 @@ def print_QFire_Advanced_User_Inputs_inp():
 
 
 def print_QFire_Bldg_Advanced_User_Inputs_inp():
-    with open('QFire_Bldg_Advanced_User_Inputs.inp', 'w') as input_file:
+    with open(os.path.join(QF_PATH,'QFire_Bldg_Advanced_User_Inputs.inp'), 'w') as input_file:
         input_file.write("1				! N/A, flag to convert QUIC-URB buildings to fuel (0 = no, 1 = yes)\n")
         input_file.write("0.5			! kg/m3, thin fuel density within buildings (if no fuel is specified)\n")
         input_file.write("2.			! N/A, attenuation coefficient within buildings\n")
@@ -166,7 +167,7 @@ def print_QFire_Bldg_Advanced_User_Inputs_inp():
 
 
 def print_QFire_Plume_Advanced_User_Inputs_inp():
-    with open('QFire_Plume_Advanced_User_Inputs.inp', 'w') as input_file:
+    with open(os.path.join(QF_PATH,'QFire_Plume_Advanced_User_Inputs.inp'), 'w') as input_file:
         input_file.write("150000			! N/A, max number of plume at each time step\n")
         input_file.write("0.1			! m/s, minimum vertical velocity of a plume. If wc is below minimum, the plume is eliminated\n")
         input_file.write("10			! m/s, maximum vertical velocity of a plume\n")
@@ -186,13 +187,13 @@ def print_QFire_Plume_Advanced_User_Inputs_inp():
 
 
 def print_QP_buildout_inp():
-    with open('QP_buildout.inp', 'w') as input_file:
+    with open(os.path.join(QF_PATH,'QP_buildout.inp'), 'w') as input_file:
         input_file.write("           0  ! total number of buildings\n")
         input_file.write("           0  ! total number of vegitative canopies\n")
 
 
 def print_QUIC_fire_inp(dom, wind):
-    with open('QUIC_fire.inp', 'w') as input_file:
+    with open(os.path.join(QF_PATH,'QUIC_fire.inp'), 'w') as input_file:
         input_file.write("1					! Fire flag: 1 = for fire; 0 = no fire\n")
         input_file.write("222				! Random number generator: -1: use time and date, any other integer > 0 is used as the seed\n")
         input_file.write("! FIRE TIMES\n")
@@ -238,7 +239,7 @@ def print_QUIC_fire_inp(dom, wind):
 
 
 def print_QU_buildings_inp():
-    with open('QU_buildings.inp', 'w') as input_file:
+    with open(os.path.join(QF_PATH,'QU_buildings.inp'), 'w') as input_file:
         input_file.write("!QUIC 6.26\n")
         input_file.write("0.1			!Wall roughness length (m)\n")
         input_file.write("0			!Number of Buildings\n")
@@ -246,7 +247,7 @@ def print_QU_buildings_inp():
 
 
 def print_QU_fileoptions_inp():
-    with open('QU_fileoptions.inp', 'w') as input_file:
+    with open(os.path.join(QF_PATH,'QU_fileoptions.inp'), 'w') as input_file:
         input_file.write("!QUIC 6.26\n")
         input_file.write("4   !output data file format flag (1=ascii, 2=binary, 3=both, 4=none)\n")
         input_file.write("0   !flag to write out non-mass conserved initial field (uofield.dat) (1=write,0=no write)\n")
@@ -257,7 +258,7 @@ def print_QU_fileoptions_inp():
         input_file.write("0   !flag to output startup wind files for topo-influenced wind fields\n")  
 
 def print_QU_metparams_inp():
-    with open('QU_metparams.inp', 'w') as input_file:
+    with open(os.path.join(QF_PATH,'QU_metparams.inp'), 'w') as input_file:
         input_file.write("!QUIC 6.26\n")
         input_file.write("0 !Met input flag (0=QUIC,1=WRF,2=ITT MM5,3=HOTMAC)\n")
         input_file.write("1 !Number of measuring sites\n")
@@ -268,7 +269,7 @@ def print_QU_metparams_inp():
 
 
 def print_QU_movingcoords_inp():
-    with open('QU_movingcoords.inp', 'w') as input_file:
+    with open(os.path.join(QF_PATH,'QU_movingcoords.inp'), 'w') as input_file:
         input_file.write("!QUIC 6.3\n")
         input_file.write("0   !Moving coordinates flag (0=no, 1=yes)\n")
         input_file.write("0   !Reference bearing of the ship relative to the non-rotated domain (degrees)\n")
@@ -289,7 +290,7 @@ def print_QU_movingcoords_inp():
 
 
 def print_QU_simparams_inp(dom, wind, qf_arrs):
-    with open('QU_simparams.inp', 'w') as input_file:
+    with open(os.path.join(QF_PATH,'QU_simparams.inp'), 'w') as input_file:
         input_file.write("!QUIC 6.26\n")
         input_file.write("{} !nx - Domain Length(X) Grid Cells\n".format(dom.nx))
         input_file.write("{} !ny - Domain Width(Y) Grid Cells\n".format(dom.ny))
@@ -342,71 +343,9 @@ def print_QU_simparams_inp(dom, wind, qf_arrs):
         input_file.write("0 !Explosive building damage flag (1 = on)\n")
         input_file.write("0 !Building Array Flag (1 = on)\n")
 
-##OLD Delete
-# def print_QU_simparams_inp(dom, wind):
-#     with open('QU_simparams.inp', 'w') as input_file:
-#         input_file.write("!QUIC 6.26\n")
-#         input_file.write("{} !nx - Domain Length(X) Grid Cells\n".format(dom.nx))
-#         input_file.write("{} !ny - Domain Width(Y) Grid Cells\n".format(dom.ny))
-#         input_file.write("22 !nz - Domain Height(Z) Grid Cells\n")
-#         input_file.write("{} !dx (meters)\n".format(dom.dx))
-#         input_file.write("{} !dy (meters)\n".format(dom.dy))
-#         input_file.write("3 !Vertical stretching flag(0=uniform,1=custom,2=parabolic Z,3=parabolic DZ,4=exponential)\n")
-#         input_file.write("1.500000 !Surface dz (meters)\n")
-#         input_file.write("4 !Number of uniform surface cells\n")
-#         input_file.write("!dz array (meters)\n")
-#         input_file.write("1\n")
-#         input_file.write("1.5\n")
-#         input_file.write("1.75\n")
-#         input_file.write("2\n")
-#         input_file.write("2.25\n")
-#         input_file.write("2.5\n")
-#         input_file.write("2.75\n")
-#         input_file.write("3\n")
-#         input_file.write("3.25\n")
-#         input_file.write("3.5\n")
-#         input_file.write("3.75\n")
-#         input_file.write("4\n")
-#         input_file.write("4.5\n")
-#         input_file.write("5.5\n")
-#         input_file.write("7\n")
-#         input_file.write("8.5\n")
-#         input_file.write("10\n")
-#         input_file.write("11.5\n")
-#         input_file.write("13\n")
-#         input_file.write("26\n")
-#         input_file.write("70\n")
-#         input_file.write("140\n")
-#         input_file.write("{} !total time increments\n".format(len(wind.times)))
-#         input_file.write("0 !UTC conversion\n")
-#         input_file.write("!Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n")
-#         for time in wind.times:
-#             input_file.write("{}\n".format(time))
-#         input_file.write("2 !rooftop flag (0-none, 1-log profile, 2-vortex)\n")
-#         input_file.write("3 !upwind cavity flag (0-none, 1-Rockle, 2-MVP, 3-HMVP)\n")
-#         input_file.write("4 !street canyon flag (0-none, 1-Roeckle, 2-CPB, 3-exp. param. PKK, 4-Roeckle w/ Fackrel)\n")
-#         input_file.write("1 !street intersection flag (0-off, 1-on)\n")
-#         input_file.write("3 !wake flag (0-none, 1-Rockle, 2-Modified Rockle, 3-Area Scaled)\n")
-#         input_file.write("1 !sidewall flag (0-off, 1-on)\n")
-#         input_file.write("2 !Canopy flag (1-Cionco w/o wakes, 2-Cionco w/ wakes)\n")
-#         input_file.write("1 !Season flag (1-Summer, 2-Winter, 3-Transition)\n")
-#         input_file.write("10 !Maximum number of iterations\n")
-#         input_file.write("1.1 !omegarelax\n")
-#         input_file.write("3 !Residual Reduction (Orders of Magnitude)\n")
-#         input_file.write("0 !Use Diffusion Algorithm (1 = on)\n")
-#         input_file.write("20 !Number of Diffusion iterations\n")
-#         input_file.write("0 !Domain rotation relative to true north (cw = +)\n")
-#         input_file.write("0.0  !UTMX of domain origin (m)\n")
-#         input_file.write("0.   !UTMY of domain origin (m)\n")
-#         input_file.write("1 !UTM zone\n")
-#         input_file.write("17 !UTM zone leter (1=A,2=B,etc.)\n")
-#         input_file.write("0 !QUIC-CFD Flag\n")
-#         input_file.write("0 !Explosive building damage flag (1 = on)\n")
-#         input_file.write("0 !Building Array Flag (1 = on)\n")
-
 
 def print_rasterorigin_txt():
-    with open('rasterorigin.txt', 'w') as input_file:
+    with open(os.path.join(QF_PATH,'rasterorigin.txt'), 'w') as input_file:
         input_file.write("0.\n")
         input_file.write("0.\n")
         input_file.write("752265.868913356\n")
@@ -417,12 +356,12 @@ def print_rasterorigin_txt():
 
 
 def print_Runtime_Advanced_User_Inputs_inp():
-    with open('Runtime_Advanced_User_Inputs.inp', 'w') as input_file:
+    with open(os.path.join(QF_PATH,'Runtime_Advanced_User_Inputs.inp'), 'w') as input_file:
         input_file.write("8\n")
 
 
 def print_sensor1_inp(wind):
-    with open('sensor1.inp', 'w') as input_file:
+    with open(os.path.join(QF_PATH,'sensor1.inp'), 'w') as input_file:
         input_file.write("sensor1 !Site Name\n")
         input_file.write("0\n")
         input_file.write("50\n")
@@ -439,7 +378,7 @@ def print_sensor1_inp(wind):
 
 
 def print_topo_inp(flat):
-    with open('topo.inp', 'w') as input_file:
+    with open(os.path.join(QF_PATH,'topo.inp'), 'w') as input_file:
         if flat:
             input_file.write("!Relative filepath to topo .dat file (ex:: \"../path/to/topo.dat\")\n")
             input_file.write("\"\"\n")
