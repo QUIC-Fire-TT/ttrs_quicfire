@@ -12,7 +12,7 @@ import numpy as np
 def main(qf_arrs):
     #Print QF input files
     dom = qf_arrs.dom
-    wind = qf_arrs.wind
+    wind_sensors = qf_arrs.wind_sensors
     global QF_PATH
     QF_PATH = dom.QF_PATH
     qf_arrs.export_fuel()   #Export QF fuel
@@ -21,15 +21,16 @@ def main(qf_arrs):
     print_QFire_Bldg_Advanced_User_Inputs_inp()
     print_QFire_Plume_Advanced_User_Inputs_inp()
     print_QP_buildout_inp()
-    print_QUIC_fire_inp(dom, wind)
+    print_QUIC_fire_inp(dom, wind_sensors)
     print_QU_buildings_inp()
     print_QU_fileoptions_inp()
-    print_QU_metparams_inp()
+    print_QU_metparams_inp(wind_sensors)
     print_QU_movingcoords_inp()
-    print_QU_simparams_inp(dom, wind, qf_arrs)
+    print_QU_simparams_inp(dom, wind_sensors, qf_arrs)
     print_rasterorigin_txt()
     print_Runtime_Advanced_User_Inputs_inp()
-    print_sensor1_inp(wind)
+    for sensor in wind_sensors:
+        print_sensor_inp(sensor)
     print_topo_inp(flat=not qf_arrs.use_topo)
     
     src = dom.ToCopy
@@ -192,12 +193,12 @@ def print_QP_buildout_inp():
         input_file.write("           0  ! total number of vegitative canopies\n")
 
 
-def print_QUIC_fire_inp(dom, wind):
+def print_QUIC_fire_inp(dom, wind_sensors):
     with open(os.path.join(QF_PATH,'QUIC_fire.inp'), 'w') as input_file:
         input_file.write("1					! Fire flag: 1 = for fire; 0 = no fire\n")
         input_file.write("222				! Random number generator: -1: use time and date, any other integer > 0 is used as the seed\n")
         input_file.write("! FIRE TIMES\n")
-        input_file.write("{}		! When the fire is ignited in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n".format(wind.times[0]))
+        input_file.write("{}		! When the fire is ignited in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n".format(wind_sensors[0].times[0]))
         input_file.write("{}    			! Total simulation time for the fire [s]\n".format(dom.sim_time))
         input_file.write("1		   		! time step for the fire simulation [s]\n")
         input_file.write("1					! Number of fire time steps done before updating the quic wind field (integer, >= 1)\n")
@@ -257,15 +258,16 @@ def print_QU_fileoptions_inp():
         input_file.write("1   !flag for automatically killing simulation once fire behavior has quit (1=on,0=off)\n")  
         input_file.write("0   !flag to output startup wind files for topo-influenced wind fields\n")  
 
-def print_QU_metparams_inp():
+def print_QU_metparams_inp(wind_sensors):
     with open(os.path.join(QF_PATH,'QU_metparams.inp'), 'w') as input_file:
         input_file.write("!QUIC 6.26\n")
         input_file.write("0 !Met input flag (0=QUIC,1=WRF,2=ITT MM5,3=HOTMAC)\n")
-        input_file.write("1 !Number of measuring sites\n")
+        input_file.write("{} !Number of measuring sites\n".format(len(wind_sensors)))
         input_file.write("1 !Maximum size of data points profiles\n")
-        input_file.write("sensor1 !Site Name\n")
-        input_file.write("!File name\n")
-        input_file.write("sensor1.inp\n")
+        for sensor in wind_sensors:
+            input_file.write("{} !Site Name\n".format(sensor.SENSOR_NAME))
+            input_file.write("!File name\n")
+            input_file.write("{}.inp\n".format(sensor.SENSOR_NAME))
 
 
 def print_QU_movingcoords_inp():
@@ -289,7 +291,7 @@ def print_QU_movingcoords_inp():
         input_file.write("1488795000	0	0	0	0\n")
 
 
-def print_QU_simparams_inp(dom, wind, qf_arrs):
+def print_QU_simparams_inp(dom, wind_sensors, qf_arrs, manual_dz=False):
     with open(os.path.join(QF_PATH,'QU_simparams.inp'), 'w') as input_file:
         input_file.write("!QUIC 6.26\n")
         input_file.write("{} !nx - Domain Length(X) Grid Cells\n".format(dom.nx))
@@ -301,25 +303,29 @@ def print_QU_simparams_inp(dom, wind, qf_arrs):
         input_file.write("1.000000 !Surface dz (meters)\n")
         input_file.write("5 !Number of uniform surface cells\n")
         input_file.write("!dz array (meters)\n")
-        fuel_height = 0
-        MIN_HEIGHT = 150
-        for k in range(len(qf_arrs.rhof)):
-            if np.max(qf_arrs.rhof[k]) != 0:
-                fuel_height = k+1
-        relief = 0
-        if qf_arrs.use_topo:
-            relief = qf_arrs.topo.max() - qf_arrs.topo.min()
-        if (relief * 3) > MIN_HEIGHT:
-            height = fuel_height + (relief * 3)
+        if manual_dz:
+            for z_temp in qf_arrs.dz_array:
+                input_file.write("{}\n".format(z_temp))
         else:
-            height = fuel_height + relief + MIN_HEIGHT  
-        dz_array = build_parabolic_dz_array(nz=22, Lz=height, n_surf=5, dz_surf=1)
-        for z_temp in dz_array:
-            input_file.write("{}\n".format(z_temp))
-        input_file.write("{} !total time increments\n".format(len(wind.times)))
+            fuel_height = 0
+            MIN_HEIGHT = 150
+            for k in range(len(qf_arrs.rhof)):
+                if np.max(qf_arrs.rhof[k]) != 0:
+                    fuel_height = k+1
+            relief = 0
+            if qf_arrs.use_topo:
+                relief = qf_arrs.topo.max() - qf_arrs.topo.min()
+            if (relief * 3) > MIN_HEIGHT:
+                height = fuel_height + (relief * 3)
+            else:
+                height = fuel_height + relief + MIN_HEIGHT  
+            dz_array = build_parabolic_dz_array(nz=22, Lz=height, n_surf=5, dz_surf=1)
+            for z_temp in dz_array:
+                input_file.write("{}\n".format(z_temp))
+        input_file.write("{} !total time increments\n".format(len(wind_sensors[0].times)))
         input_file.write("0 !UTC conversion\n")
         input_file.write("!Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n")
-        for time in wind.times:
+        for time in wind_sensors[0].times:
             input_file.write("{}\n".format(time))
         input_file.write("2 !rooftop flag (0-none, 1-log profile, 2-vortex)\n")
         input_file.write("3 !upwind cavity flag (0-none, 1-Rockle, 2-MVP, 3-HMVP)\n")
@@ -360,21 +366,21 @@ def print_Runtime_Advanced_User_Inputs_inp():
         input_file.write("8\n")
 
 
-def print_sensor1_inp(wind):
-    with open(os.path.join(QF_PATH,'sensor1.inp'), 'w') as input_file:
-        input_file.write("sensor1 !Site Name\n")
+def print_sensor_inp(sensor):
+    with open(os.path.join(QF_PATH,'{}.inp'.format(sensor.SENSOR_NAME)), 'w') as input_file:
+        input_file.write("{} !Site Name\n".format(sensor.SENSOR_NAME))
         input_file.write("0\n")
         input_file.write("50\n")
         input_file.write("1 !Site Coordinate Flag (1=QUIC, 2=UTM, 3=Lat/Lon)\n")
-        input_file.write("1 !X coordinate (meters)\n")
-        input_file.write("1 !Y coordinate (meters)\n")
-        for i,time in enumerate(wind.times):
+        input_file.write("{} !X coordinate (meters)\n".format(sensor.SENSOR_X))
+        input_file.write("{} !Y coordinate (meters)\n".format(sensor.SENSOR_Y))
+        for i,time in enumerate(sensor.times):
             input_file.write("{} !Begining of time step in Unix Epoch time (integer seconds since 1970/1/1 00:00:00)\n".format(time))
             input_file.write("1 !site boundary layer flag (1 = log, 2 = exp, 3 = urban canopy, 4 = discrete data points)\n")
             input_file.write("0.01 !site zo\n")
             input_file.write("0.\n")
             input_file.write("!Height (m),Speed	(m/s), Direction (deg relative to true N)\n")
-            input_file.write("{} {}	{}\n".format(wind.SENSOR_HEIGHT, wind.speeds[i], wind.dirs[i]))
+            input_file.write("{} {}	{}\n".format(sensor.SENSOR_HEIGHT, sensor.speeds[i], sensor.dirs[i]))
 
 
 def print_topo_inp(flat):
