@@ -9,10 +9,44 @@ from distutils.log import debug
 import geopandas as gpd
 import pandas as pd
 import numpy as np
-import ttrs_quicfire.quic_fire as qf
 import os
 from shapely.geometry import Polygon, Point, LineString, mapping
 
+class Domain_Params:
+    """
+    Class contains domain parameters
+    """
+    def __init__(self, X_length=400, Y_length=400, dx=2, dy=2, dz=1, nz=128, 
+                 xmin=None, ymin=None, x_center=None, y_center=None, 
+                 shape_paths=None, QF_PATH='default', ToCopy_PATH='default'):    
+        self.X_length = X_length    #Width of domain [m]
+        self.Y_length = Y_length    #Height of domain [m]
+        self.dx = dx            #x dimensions [m]
+        self.dy = dy            #y dimensions [m]
+        self.dz = dz            #z dimensions [m]
+        self.nx = int(self.X_length/self.dx)       #number of x cells
+        self.ny = int(self.Y_length/self.dy)        #number of y cells
+        self.nz = nz            #number of z cells
+        self.qu_nz = 22         #Reasonable num of cells
+        #greater (Fuel h + 100m,  fuel h + 3x topo)
+        self.qu_height = 350    #CHANGE: From Sara's example
+        self.xmin = xmin       #Shapefile xmin [m]
+        self.ymin = ymin       #Shapefile ymin [m]
+        self.x_center = x_center  #for FF
+        self.y_center = y_center  #for FF
+        self.sim_time = None      #Build Sim Time
+        self.shape_paths = shape_paths
+        #Build qf path
+        if QF_PATH=='default':
+            QF_PATH = default_path('Run')
+        if not os.path.exists(QF_PATH):
+            os.mkdir(QF_PATH)
+        self.QF_PATH = QF_PATH
+        if ToCopy_PATH=='default':
+            ToCopy_PATH = default_path('FilesToCopy')
+        if not os.path.exists(ToCopy_PATH):
+            os.mkdir(ToCopy_PATH)
+        self.ToCopy = ToCopy_PATH
 
 def boundingbox(shape_paths, buffer, QF_PATH):
     burn_plot = load_shapefile(shape_paths.burn_plot)
@@ -32,7 +66,7 @@ def boundingbox(shape_paths, buffer, QF_PATH):
     Y_length = y1-y0
     
     #Build domain class with bbox xextent
-    dom = qf.Domain_Params(X_length=X_length, Y_length=Y_length, dx=2, dy=2, dz=1,
+    dom = Domain_Params(X_length=X_length, Y_length=Y_length, dx=2, dy=2, dz=1,
                            nz=128, xmin=x0, ymin=y0, x_center=x_center, 
                            y_center=y_center, shape_paths=shape_paths, QF_PATH=QF_PATH)
     
@@ -299,3 +333,21 @@ def line_to_points_to_df(dom, ignition_lines, spacing=4):
     df['IgTime'] = 0.0
     
     return df    
+
+def default_path(folder_name):
+    """
+    Parameters
+    ----------
+    folder_name : str
+
+    Returns
+    -------
+    Default path: str, current working directory + folder_name
+
+    """
+    ##main_loc should contain file path of PY script calling this one
+    ##Inspect doesn't work when using coding environments
+    #main_loc = os.path.split(inspect.stack()[-1][1])[0] #https://stackoverflow.com/questions/50499/how-do-i-get-the-path-and-name-of-the-file-that-is-currently-executing
+    ##Current working directory should work if we don't change it
+    main_loc = os.getcwd()
+    return(os.path.join(main_loc, folder_name))
