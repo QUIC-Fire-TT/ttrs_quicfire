@@ -70,7 +70,7 @@ class QF_Fuel_Arrays:
         self.use_topo = use_topo
         self.fuel_arrs = [self.rhof,self.moist,self.depth,self.topo]
         self.name_arrs = [self.rhof_name,self.moist_name,self.depth_name,self.topo_name]
-        self.wind_sensors = []
+        self.wind_sensors = {}
     
     def export_fuel(self, QF_PATH='default'):
         QF_PATH = self.dom.QF_PATH
@@ -196,7 +196,8 @@ class QF_Fuel_Arrays:
         for d in dirs:
             if d < 0 or d >= 360:
                 raise WindDirOutOfRange(d)
-        self.wind_sensors.append(Sensor(times, speeds, dirs, SENSOR_NAME, SENSOR_X, SENSOR_Y, SENSOR_HEIGHT, build=False))
+        self.wind_sensors[SENSOR_NAME] = Sensor(times, speeds, dirs, SENSOR_NAME, 
+                                                SENSOR_X, SENSOR_Y, SENSOR_HEIGHT, build=False)
 
 #Currently only building normal wind field around
 class Sensor:
