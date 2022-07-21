@@ -10,11 +10,11 @@ from distutils.log import debug
 import ttrs_quicfire.build_FF_domain as FF
 import ttrs_quicfire.dat_file_functions as dat
 import ttrs_quicfire.print_inp_files
+import ttrs_quicfire.build_shapefiles as bs
 from ttrs_quicfire.exceptions import WindDirOutOfRange, WindSpeedOutOfRange, DataLengthMismatch
 
 #Standard Libraries
 #import geopandas as gpd
-import ttrs_quicfire.build_shapefiles as bs
 import os
 import numpy as np
 import pandas as pd
@@ -43,7 +43,7 @@ class Shapefile_Paths:
                 return None 
         
         if SHAPE_PATH=='default':
-            SHAPE_PATH = default_path('Shapefiles')
+            SHAPE_PATH = bs.default_path('Shapefiles')
         self.SHAPE_PATH = SHAPE_PATH
         self.burn_plot = shapefile_check(self, burn_plot)
         self.roads = shapefile_check(self, roads)
@@ -52,41 +52,6 @@ class Shapefile_Paths:
         self.ignitions = shapefile_check(self, ignitions)
         self.bbox = None
         
-class Domain_Params:
-    """
-    Class contains domain parameters
-    """
-    def __init__(self, X_length=400, Y_length=400, dx=2, dy=2, dz=1, nz=128, 
-                 xmin=None, ymin=None, x_center=None, y_center=None, 
-                 shape_paths=None, QF_PATH='default', ToCopy_PATH='default'):    
-        self.X_length = X_length    #Width of domain [m]
-        self.Y_length = Y_length    #Height of domain [m]
-        self.dx = dx            #x dimensions [m]
-        self.dy = dy            #y dimensions [m]
-        self.dz = dz            #z dimensions [m]
-        self.nx = int(self.X_length/self.dx)       #number of x cells
-        self.ny = int(self.Y_length/self.dy)        #number of y cells
-        self.nz = nz            #number of z cells
-        self.qu_nz = 22         #Reasonable num of cells
-        #greater (Fuel h + 100m,  fuel h + 3x topo)
-        self.qu_height = 350    #CHANGE: From Sara's example
-        self.xmin = xmin       #Shapefile xmin [m]
-        self.ymin = ymin       #Shapefile ymin [m]
-        self.x_center = x_center  #for FF
-        self.y_center = y_center  #for FF
-        self.sim_time = None      #Build Sim Time
-        self.shape_paths = shape_paths
-        #Build qf path
-        if QF_PATH=='default':
-            QF_PATH = default_path('Run')
-        if not os.path.exists(QF_PATH):
-            os.mkdir(QF_PATH)
-        self.QF_PATH = QF_PATH
-        if ToCopy_PATH=='default':
-            ToCopy_PATH = default_path('FilesToCopy')
-        if not os.path.exists(ToCopy_PATH):
-            os.mkdir(ToCopy_PATH)
-        self.ToCopy = ToCopy_PATH
         
 class QF_Fuel_Arrays:
     """
@@ -439,7 +404,7 @@ def dom_from_burn_plot(shape_paths, buffer=30, QF_PATH='default'):
 ###Functions for build qf_arrs (Fuel Domains)
 def build_ff_domain(dom, FUEL_PATH = 'default', FF_request=True, use_topo=True):
     if FUEL_PATH=='default':
-        FUEL_PATH = default_path('FF_Fuel')
+        FUEL_PATH = bs.default_path('FF_Fuel')
     qf_arrs = FF.build_ff_domain(dom, FUEL_PATH, FF_request, use_topo)
     return qf_arrs
 ###############################################################################
@@ -454,23 +419,6 @@ def build_qf_run(qf_arrs):
 
 ###############################################################################
 ###Misc. helper functions
-def default_path(folder_name):
-    """
-    Parameters
-    ----------
-    folder_name : str
-
-    Returns
-    -------
-    Default path: str, current working directory + folder_name
-
-    """
-    ##main_loc should contain file path of PY script calling this one
-    ##Inspect doesn't work when using coding environments
-    #main_loc = os.path.split(inspect.stack()[-1][1])[0] #https://stackoverflow.com/questions/50499/how-do-i-get-the-path-and-name-of-the-file-that-is-currently-executing
-    ##Current working directory should work if we don't change it
-    main_loc = os.getcwd()
-    return(os.path.join(main_loc, folder_name))
 
 def chain2meter(val):
     return val*20.1168
