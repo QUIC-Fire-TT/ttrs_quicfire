@@ -134,7 +134,7 @@ class SimField:
 def main():
 
     # read input files
-    qu, qf, ignitions, flags, fb = import_inputs()
+    qu, qf, ignitions, ignite, flags, fb = import_inputs()
     print(qf.nx)
     print(qf.ny)
     #qu.time = qu.time+offset
@@ -144,7 +144,7 @@ def main():
     ui = UserInputs()
     
     # plot outputs
-    plot_outputs(qu, qf, ignitions, flags, fb, ui)
+    plot_outputs(qu, qf, ignitions, ignite, flags, fb, ui)
     
     # VTK    
     if ui.gen_vtk:
@@ -490,7 +490,7 @@ def create_plots_folder():
     return save_dir
 
 
-def plot_outputs(qu, qf, ignitions, flags, fb, ui):
+def plot_outputs(qu, qf, ignitions, ignite, flags, fb, ui):
     print("Plotting output files")
 
     # Setting image specs
@@ -584,7 +584,26 @@ def plot_outputs(qu, qf, ignitions, flags, fb, ui):
     # ------- Firetech ignitions
     print("  - initial ignitions")
     plot_ignitions(fuel_dens[0], ignitions.hor_plane, qf.horizontal_extent, save_dir, img_specs)
-
+    
+    #Plot ignite.dat 
+    #Send filename and ignite class to label_ignitions, save as list
+    try:
+        fid = "ignite.dat"
+        list_ignitions = label_ignitions(fid, ignite)
+        #Get indexes for arrows
+        index = indexing_maximum(list_ignitions)
+        #Call another method to reorganize list_ignitions into useable data
+        map_ignite(list_ignitions, ignite)
+        #Placeholder for flag to turn arrows on or off
+        arrow_flag = 1
+        
+        print("  - All ignitions")
+        plot_ignite(fuel_dens[0], ignite.hor_plane, qf.horizontal_extent, save_dir, img_specs, index, list_ignitions, arrow_flag)
+        
+    except IOError:
+        print('No ignite.dat')
+        pass
+    
     #plot topograpy
     #print("  - topo")
     #plot_topo("h", qf.horizontal_extent, save_dir, img_specs,qf)
@@ -752,6 +771,254 @@ def plot_outputs(qu, qf, ignitions, flags, fb, ui):
         plot_2d_field(False, qf, plane, fuels_moist,
                       "Fuel moisture [-]", "fuels_moist", [], save_dir, img_specs)
         del fuels_moist
+
+    
+def plot_ignite(fuel_dens0, ignitions, myextent, save_dir, img_specs, index, list_ignitions, arrow_flag):
+    # Define colormap
+    # http://matplotlib.org/api/colors_api.html
+    mycol = [[1., 1., 1.], [0.765, 0.765, 0.765], [1., 0., 0.]]
+    my_cmap = pylab.matplotlib.colors.ListedColormap(mycol, 'my_colormap', N=None)
+    
+    currval = np.sum(fuel_dens0, axis=2)
+    currval[np.where(currval > 0)] = 1
+    inds = np.where(ignitions > 0)
+    
+    currval[inds] = 2
+    fig = pylab.figure(figsize=(img_specs.figure_size[0], img_specs.figure_size[1]))
+    ax = fig.add_subplot(111)
+    
+    
+    
+    #Plot arrows
+    x = 0
+    a = len(index)
+    
+    #print arrow with those indexes
+    #If flag is turned on
+    if arrow_flag == 1 or arrow_flag == 3:
+        #Length of index
+        while x <= (a -1):  
+            #If aeriel ignition type
+            if len(index[0]) < 5:    
+                #If y value of first is less than y value of next
+                if index[x][1] < index[x+1][1]:
+                    pylab.arrow((2* index[x][0]) - 10, 2* (index[x][1]), (2 *(index[x+1][0] - index[x][0]) ), 2 *(index[x+1][1] - index[x][1]), width = 1, head_width = 8)
+                    x += 2
+                else:
+                    pylab.arrow((2* index[x][0] - 10), 2* index[x][1], (-2 *(index[x][0] - index[x+1][0]) ), -2*(index[x][1] - index[x+1][1]), width = 1, head_width = 8)
+                    x += 2
+            else:
+                if index[x][1] < index[x][3]:
+                    pylab.arrow((index[x][0]) - 10, index[x][1], (index[x][2] - index[x][0]) , (index[x][3] - index[x][1]), width = 1, head_width = 8)
+                    x += 1
+                else:
+                    pylab.arrow( index[x][0] - 10, index[x][1], (-1 *(index[x][0] - index[x][2]) ), -1 * (index[x][1] - index[x][3]), width = 1, head_width = 8)
+                    x += 1
+           
+    else:
+        x += 1
+    y = 0
+    if arrow_flag == 2 or arrow_flag == 3:
+        while y <= (a - 1):
+            #If aeriel
+            if len(index[0]) < 5:
+                float_index_x = float(index[y][0])
+                float_index_y = float(index[y][1])
+                pylab.annotate('%s s' %int(index[y][2]), (2 * float_index_x + 10, 2* float_index_y ) )
+                y += 1
+            #If atv
+            else:
+                pylab.annotate('%s s' %int(index[y][4]), (index[y][0] + 10, index[y][1]) )
+                pylab.annotate('%s s' %int(index[y][5]), (index[y][2] + 10, index[y][3]) ) 
+                y += 1
+    else:
+        y += 1
+   
+    
+    pylab.imshow(currval, cmap=my_cmap, interpolation='none', origin='lower',
+                 extent=myextent, vmin=-0.5, vmax=2.5)
+    cbar = pylab.colorbar(ticks=[0, 1, 2])
+    cbar.ax.set_yticklabels(['No fuel', 'Fuel', 'Ignitions'])
+    cbar.ax.tick_params(labelsize=img_specs.colorbar_font["size"])
+
+    #Plot overtop of ignition points to be more even
+    if len(index[0]) < 5:
+        for j in range(0, len(list_ignitions)):
+            pylab.scatter((2 * list_ignitions[j][0]) + 2, (2 * list_ignitions[j][1]) + 2, s = 10, c = "Red", marker = "P")
+    else:    
+        for j in range(0, len(list_ignitions)):
+            pylab.scatter(list_ignitions[j][0], list_ignitions[j][1], s = 10, c = "Red", marker = "P")
+            pylab.scatter(list_ignitions[j][2], list_ignitions[j][3], s = 10, c = "Red", marker = "P")
+    pylab.xlabel('X [m]', **img_specs.axis_font)
+    pylab.ylabel('Y [m]', **img_specs.axis_font)
+    pylab.title('All ignitions # %d' % len(inds[0]), **img_specs.title_font)
+
+    set_ticks_font(img_specs.axis_font, ax) 
+    
+    pylab.savefig(save_dir + os.sep + 'Allignitions.png')
+    pylab.close()
+
+def plot_topo(filestr, myextent, save_dir, img_specs,qf):
+
+    fname = 'Output/'+filestr + ".bin"
+    fid = open_file(fname, 'rb')
+    var = np.fromfile(fid, dtype=np.float32, count=(qf.nx+2)*(qf.ny+2))
+    currval = np.reshape(var,(qf.ny+2,qf.nx+2))
+    myvmin = 1e8
+    myvmax = -1e8
+    myvmin = min(myvmin, np.amin(currval))
+    myvmax = max(myvmax, np.amax(currval))
+    myvmin = math.floor(myvmin)
+    myvmax = math.ceil(myvmax)
+    if myvmin == myvmax:
+        if myvmin == 0:
+            myvmin = -1
+            myvmax = +1
+        else:
+            myvmin *= 0.5
+            myvmax *= 2.
+    fig = pylab.figure(figsize=(img_specs.figure_size[0], img_specs.figure_size[1]))
+    ax = fig.add_subplot(111)
+
+    pylab.imshow(currval,cmap="jet", interpolation='none', origin='lower',
+                 extent=myextent, vmin=myvmin, vmax=myvmax)
+
+    pylab.colorbar()
+    pylab.xlabel('X [m]', **img_specs.axis_font)
+    pylab.ylabel('Y [m]', **img_specs.axis_font)
+    pylab.title('Topography', **img_specs.title_font)
+
+    set_ticks_font(img_specs.axis_font, ax)
+
+    pylab.savefig(save_dir + os.sep + 'topography.png')
+    pylab.close()
+    
+    
+    
+    #Read's ignite.dat into an array
+def label_ignitions(fid, ignite):
+    fileObj = open("ignite.dat", "r") #opens the file in read mode
+    
+    #Get length of file
+    Counter = 0
+    #read from file
+    Content = fileObj.read()
+    CoList = Content.split("\n")
+    for i in CoList:
+        if i:
+            Counter += 1
+    fileObj.close
+    
+    
+    fileObjAgain = open(fid, "r") #opens the file in read mode
+    array = []
+    
+    #need a check
+    whichIgnition = fileObjAgain.readline()
+    #Get the digit out of the string first line
+    ignition_flag = [int(i) for i in whichIgnition.split() if i.isdigit()]
+    #assign the digit from the list to a variable
+    ign_flag = ignition_flag[0]
+    #Assign the ignite class flag to be used in map_ignite
+    ignite.flag = ign_flag
+    #Create a string to be appended to if needed
+    x = ""
+    if ign_flag == 4:
+        i = 0
+        #skip first 5 lines
+        for i in range(0,5):
+            fileObjAgain.readline()
+            i += 1 
+        j = 0
+        #Append the next line to a new array
+        for j in range(0,Counter - 6):
+            x = fileObjAgain.readline()
+            addition = list(map(int, x.split()))
+            array.append(addition)
+            #array.append(x)
+            j += 1
+        return array
+    
+    elif ign_flag == 5: 
+        i = 0
+        #skip first 5 lines
+        for i in range(0,5):
+            fileObjAgain.readline()
+            i += 1 
+        j = 0
+        #Append the next line to a new array
+        for j in range(0,Counter - 6):
+            x = fileObjAgain.readline()
+            #Difference is float vs int
+            addition = list(map(float, x.split()))
+            array.append(addition)
+            #array.append(x)
+            j += 1
+        return array
+    
+#Get the indexes for points for arrows to start and end     
+def indexing_maximum(list_ignitions):
+    i = 0
+    min_time = 1
+    max_time = 1
+    first_x = 0
+    indexes = []
+    first_x = int(list_ignitions[0][0])
+    min_time = int(list_ignitions[0][2])
+    max_time = int(list_ignitions[0][2])
+    #Add the first ignition
+    indexes.append(list_ignitions[0])
+    
+    for i in range(1, len(list_ignitions)):
+        #If the x value is close to the first x
+        range_x_under = int(first_x - 24)
+        range_x_over = int(first_x + 24)
+        
+        if list_ignitions[i][0] in range(range_x_under, range_x_over):
+            
+            if min_time > list_ignitions[i][2]:
+                min_time = list_ignitions[i][2]
+                first_x = list_ignitions[i][0]
+                
+            if max_time < list_ignitions[i][2]:
+                max_time = list_ignitions[i][2]
+                first_x = list_ignitions[i][0]
+        #If the x value changes         
+        else:
+            indexes.append(list_ignitions[i-1])
+            indexes.append(list_ignitions[i])
+            first_x = list_ignitions[i][0]
+            min_time = list_ignitions[i][2]
+            max_time = list_ignitions[i][2]
+                  
+                
+        i += 1
+    #Add the last ignition
+    k = len(list_ignitions)
+    indexes.append(list_ignitions[k-1])
+    
+    return indexes
+    
+    
+def map_ignite(list_ignitions, ignite):
+    i = 0
+    if ignite.flag == 4:
+        for i in range(0, len(list_ignitions)):
+            y_value = list_ignitions[i][0] 
+            x_value = list_ignitions[i][1]  
+            ignite.hor_plane[x_value][y_value] = 1
+            i += 1
+    elif ignite.flag == 5:
+        for i in range(0, len(list_ignitions)):
+            y_value = int(list_ignitions[i][0] / 2) 
+            x_value = int(list_ignitions[i][1] / 2) 
+            ignite.hor_plane[x_value][y_value] = 1
+            y_value = int(list_ignitions[i][2] / 2) 
+            x_value = int(list_ignitions[i][3] / 2) 
+            ignite.hor_plane[x_value][y_value] = 1
+            i += 1
+    return
+    
 
 
 def plot_firebrands(fuel_dens, ignitions, qf, fb, save_dir, img_specs):
@@ -1314,12 +1581,13 @@ def set_firetech_ignitions(ignitions, qf):
     ignitions.hor_plane = np.sum(sel_ign, axis=2)
 
 
-def read_ignitions(fid, qf, ignitions):
+def read_ignitions(fid, qf, ignitions, ignite):
     print(fid.readline())  # ! IGNITION LOCATIONS
     ignitions.flag = get_line(fid, 1)
 
     # Specify 2D array of ignitions
     ignitions.hor_plane = np.zeros((qf.ny, qf.nx))
+    ignite.hor_plane = np.zeros((qf.ny, qf.nx))
 
     if ignitions.flag == 1:  # line
         set_line_fire(fid, ignitions, qf)
@@ -1340,11 +1608,11 @@ def read_ignitions(fid, qf, ignitions):
         n = 0
 
     elif ignitions.flag == 6:  # ignite.dat
-        set_firetech_ignitions(ignitions, qf)
+        set_firetech_ignitions(ignitions, ignite, qf)
         n = 1
 
     elif ignitions.flag == 7:  # ignite.dat
-        #set_firetech_ignitions(ignitions, qf)
+        #set_firetech_ignitions(ignitions, ignite, qf)
         n = 1
 
     else:
@@ -1396,7 +1664,7 @@ def read_path(fid, qf):
     qf.path = temp[1:-1]
     
 
-def read_qfire_file(qf, qu, ignitions, flags, fb):
+def read_qfire_file(qf, qu, ignitions, ignite, flags, fb):
     fid = open_file('QUIC_fire.inp', 'r')
 
     read_times(fid, qu, qf)
@@ -1404,7 +1672,7 @@ def read_qfire_file(qf, qu, ignitions, flags, fb):
         read_fire_grid(fid, qu, qf)
         read_path(fid, qf)
         read_fuel(fid)
-        read_ignitions(fid, qf, ignitions)
+        read_ignitions(fid, qf, ignitions, ignite)
         read_file_flags(fid, flags)
     if flags.firebrands == 1:
         read_firebrands(fb)
@@ -1434,15 +1702,16 @@ def import_inputs():
     qu = SimField()
     qf = SimField()
     ignitions = IgnitionClass()
+    ignite = IgnitionClass()
     flags = FlagsClass()
     fb = FbClass()
 
     # Read input files
     read_qu_grid(qu)
-    read_qfire_file(qf, qu, ignitions, flags, fb)
+    read_qfire_file(qf, qu, ignitions, ignite, flags, fb)
     read_sensor(qf, qu)
 
-    return qu, qf, ignitions, flags, fb
+    return qu, qf, ignitions, ignite, flags, fb
 
 
 def export_vtk(qf, qu, flags):
