@@ -413,8 +413,8 @@ def build_ff_domain(dom, FUEL_PATH = 'default', FF_request=True, use_topo=True):
 
 ###############################################################################
 ###Functions for printing QF inputs
-def build_qf_run(qf_arrs):
-    ttrs_quicfire.print_inp_files.main(qf_arrs)
+def build_qf_run(qf_arrs, manual_dz=False):
+    ttrs_quicfire.print_inp_files.main(qf_arrs, manual_dz)
 ###############################################################################
 
 

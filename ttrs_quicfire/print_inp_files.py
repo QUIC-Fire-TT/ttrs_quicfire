@@ -9,7 +9,7 @@ from distutils.dir_util import copy_tree
 import os, sys
 import numpy as np
 
-def main(qf_arrs):
+def main(qf_arrs, manual_dz):
     #Print QF input files
     dom = qf_arrs.dom
     wind_sensors = qf_arrs.wind_sensors
@@ -27,7 +27,7 @@ def main(qf_arrs):
     print_QU_fileoptions_inp()
     print_QU_metparams_inp(wind_sensors)
     print_QU_movingcoords_inp()
-    print_QU_simparams_inp(dom, wind_sensors[ws_keys[0]], qf_arrs)
+    print_QU_simparams_inp(dom, wind_sensors[ws_keys[0]], qf_arrs, manual_dz=manual_dz)
     print_rasterorigin_txt()
     print_Runtime_Advanced_User_Inputs_inp()
     for k in ws_keys:
