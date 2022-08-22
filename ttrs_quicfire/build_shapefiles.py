@@ -306,6 +306,52 @@ def build_ig_lines(shape_paths, spacing, wind_dir):
     #ignition.to_file(os.path.join(shape_paths.SHAPE_PATH, 'ig_lines_after.shp'))
     return ignition
 
+def build_black(shape_paths, wind_dir, ring_thetas=[0.0, 360.0]):
+    burnplt = load_shapefile(shape_paths.burn_plot)
+    # Ensure burn plot is a ploygon
+    if isinstance(burnplt.iloc[0]['geometry'], LineString):
+        burnplt = linestring_to_polygon(burnplt)
+
+    ignitions = polygon_to_linestring(burnplt)
+
+    # Modified from ign_module_v2.py by @mathfire
+    ignitions = ignitions.iloc[0]['geometry']
+    x0 = ignitions.centroid
+    # Compute and pad max distance from centroid to ring
+    r_outer = np.ceil(x0.hausdorff_distance(ignitions))
+    # Compute and pad min distance from centroid to ring
+    r_inner = np.floor(x0.distance(ignitions))
+    # Set up fine mesh for scan wedge
+    n_points = 128
+    # Build a scan wedge polygon
+    if (ring_thetas[0] < ring_thetas[1]):
+        angles = np.linspace(ring_thetas[0], ring_thetas[1], n_points)
+        if np.abs(ring_thetas[1] - ring_thetas[0]) == 360.0:
+            # Disconnect the ring (avoids self-intersections that crash the clip routine later on)
+            angles = angles[:-1]
+    else:
+        angles1 = np.linspace(ring_thetas[0], 360, int(n_points/2))
+        angles1 = np.flip(angles1)
+        angles1 = angles1[:-1]
+        angles2 = np.linspace(ring_thetas[1], 0, int(n_points/2))
+        angles = np.concatenate((angles2, angles1))
+        print(angles)
+    scannulus_outer = [[r_outer*np.cos(theta*np.pi/180.0)+x0.coords[0][0],
+                        r_outer*np.sin(theta*np.pi/180.0)+x0.coords[0][1]] for theta in angles]
+    scannulus_inner = [[r_inner*np.cos(theta*np.pi/180.0)+x0.coords[0][0],
+                        r_inner*np.sin(theta*np.pi/180.0)+x0.coords[0][1]] for theta in angles]
+    scannulus_inner = scannulus_inner[::-1]
+    scannulus = Polygon(np.vstack([scannulus_outer, scannulus_inner]))
+
+    # Convert to GeoDataFrames to use clip tool
+    ignitions = gpd.GeoDataFrame(index=[0], geometry=[ignitions])
+    scannulus = gpd.GeoDataFrame(index=[0], geometry=[scannulus])
+    # Clip the line ignition to teh scan_wedge
+    partial_border = gpd.clip(ignitions, scannulus)
+    partial_border['Length'] = partial_border.geometry.length
+
+    return partial_border
+
 def line_to_points_to_df(dom, ignition_lines, spacing=4):
     if isinstance(ignition_lines, str):
         ignition_lines = load_shapefile(ignition_lines)

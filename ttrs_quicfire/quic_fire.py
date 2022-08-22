@@ -6,7 +6,7 @@ Created on Wed Mar 23 10:10:35 2022
 """
 
 #TT Libraries
-from distutils.log import debug
+from turtle import down
 import ttrs_quicfire.build_FF_domain as FF
 import ttrs_quicfire.dat_file_functions as dat
 import ttrs_quicfire.print_inp_files
@@ -169,10 +169,35 @@ class QF_Fuel_Arrays:
         msk = self.mask_from_shape(fuelbreak)
 
         for f_arr in self.fuel_arrs:
-            if f_arr is not self.topo:
-                for z in range(f_arr.shape[0]):
-                    z_layer = f_arr[z,:,:]
-                    z_layer[~msk] = 0
+            for z in range(f_arr.shape[0]):
+                z_layer = f_arr[z,:,:]
+                z_layer[~msk] = 0
+
+    def build_black(self, wind_dir, shape_path='default', ring_thetas=[0.0, 360.0]):
+        """
+        Builds a fuel break into the unit on the downwind side.
+        Input:
+            wind_dir = the initial direction of the wind
+        """
+        if shape_path=='default':
+            shape_paths = self.dom.shape_paths
+        else:
+            shape_paths = shape_path
+        
+        bbox_path = shape_paths.bbox
+        build_black_lines = bs.build_black(shape_paths, wind_dir=wind_dir, ring_thetas=ring_thetas)
+
+        if isinstance(build_black_lines.iloc[0]['geometry'], Polygon):
+            build_black_lines = bs.polygon_to_linestring(build_black_lines)
+        
+        build_black_lines = bs.clip_to_bbox(build_black_lines, bbox_path)
+        build_black_lines = build_black_lines.buffer(-5, single_sided=True)
+        build_black_lines = bs.clip_to_bbox(build_black_lines, bbox_path)
+        msk = self.mask_from_shape(build_black_lines)
+        
+        for f_arr in self.fuel_arrs:
+            layer = f_arr[0,:,:]
+            layer[~msk] = 0
     
     def calc_normal_windfield(self, start_speed, start_dir, start_time=0, shift_int=300, SENSOR_HEIGHT=6.1):
         times = list(range(start_time, start_time + self.dom.sim_time + 1, shift_int))
@@ -230,8 +255,8 @@ class WindShifts:
 ###Functions for building ignitions
 def atv_ignition(dom, wind_dir, num_ignitors = 3, line_space_chain = 1, 
                  ig_type='strip', dash_int_chain = 0.5, dot_int_chain = 0.25,
-                 ignitors_wait_time = 20, ignition_num_wait_time = 0,
-                 ADD_TIME_AFTER_LAST_IG = 1800, SPEED_OF_IGNITION = 1):
+                 ignitors_wait_time = 20, ignition_num_wait_time = 0, ring_thetas=None,
+                 ADD_TIME_AFTER_LAST_IG = 1800, SPEED_OF_IGNITION = 1, BURN_BLACK=False):
     """
     Need to update: only builds lines currently
     """
@@ -246,6 +271,37 @@ def atv_ignition(dom, wind_dir, num_ignitors = 3, line_space_chain = 1,
     if (wind_dir>45 and wind_dir<=135) or (wind_dir>225 and wind_dir<=315):
         ig_dirs = ('N-S','S-N')
     else: ig_dirs = ('E-W','W-E')
+
+    if BURN_BLACK:
+        if ring_thetas == None:
+            down_wind = 270 - wind_dir % 360
+            ring_thetas = [down_wind-45, down_wind+45]
+            if ring_thetas[0] < 0:
+                ring_thetas[0] += 360
+            
+            if ring_thetas[1] < 0:
+                ring_thetas[1] += 360
+            
+            if ring_thetas[0] > 360:
+                ring_thetas[0] -= 360
+            
+            if ring_thetas[1] > 360:
+                ring_thetas[1] -= 360
+        build_black_lines = bs.build_black(shape_paths, wind_dir=wind_dir, ring_thetas=ring_thetas)
+
+        build_black_lines['Ig_Num'] = 0
+        build_black_lines['ATV_Num'] = 0
+        build_black_lines['Add_Time'] = 0
+        build_black_lines['Dir'] = ''
+        for i in range(len(build_black_lines)):
+            build_black_lines.Ig_Num.iloc[i] = 0
+            build_black_lines.ATV_Num.iloc[i] = 0
+            build_black_lines.Add_Time.iloc[i] = 0
+            build_black_lines.Dir.iloc[i] = ig_dirs[0]
+
+        # Save Build Black Shapefile
+        build_black_lines.to_file(os.path.join(shape_paths.SHAPE_PATH, 'build_black.shp'))
+        df_build_black = bs.line_to_points_to_df(dom, build_black_lines, spacing=4)
     
     ignition_lines['Ig_Num'] = 0
     ignition_lines['ATV_Num'] = 0
@@ -274,12 +330,18 @@ def atv_ignition(dom, wind_dir, num_ignitors = 3, line_space_chain = 1,
         
     #Save shapefile
     ignition_lines.to_file(os.path.join(shape_paths.SHAPE_PATH, 'ig_lines.shp'))
+    shape_paths.ignitions = os.path.join(shape_paths.SHAPE_PATH, 'ig_lines.shp')
     if ig_type == 'strip':
         df_ig_points = bs.line_to_points_to_df(dom, ignition_lines, spacing=4)
 
     elif ig_type == 'dot':
         df_ig_points = bs.line_to_points_to_df(dom, ignition_lines, spacing=dot_int_m)
-        
+
+    # Combines the Dataframes
+    if BURN_BLACK:
+        dfs = [df_build_black, df_ig_points]
+        df_ig_points = pd.concat(dfs, keys=['burn_black', 'ignitions'])
+
     gen_ig_times(dom, df_ig_points, ADD_TIME_AFTER_LAST_IG, SPEED_OF_IGNITION)
 
 def gen_ig_times(dom, df, ADD_TIME_AFTER_LAST_IG, SPEED_OF_IGNITION):
@@ -346,7 +408,7 @@ def gen_ig_times(dom, df, ADD_TIME_AFTER_LAST_IG, SPEED_OF_IGNITION):
                     atv_end_times = [] #Reset
             except: pass #at end of iteration and don't need to calc current time any more
     
-    df= pd.concat(frames)
+    df = pd.concat(frames)
     df.IgTime = df.IgTime.astype(int) #convert ignitions times to intervals
     dom.sim_time = df.IgTime.max() + ADD_TIME_AFTER_LAST_IG
     df = df.sort_values('IgTime', ascending=True) #sort by ignition time before printing
