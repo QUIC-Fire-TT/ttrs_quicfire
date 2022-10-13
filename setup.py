@@ -4,7 +4,7 @@ info = open("README.md").read()
 
 setup(
     name='ttrs_quicfire',
-    version='1.1.0',
+    version='2.0.0',  #ver 4 is for QFVD5
     description='ttrs_quicfire is a Python library to easily configure burn models for plots of land defined using shape files for the quicfire model.',
     long_description=info,
     long_description_content_type='text/markdown',

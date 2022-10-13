@@ -9,7 +9,7 @@ Created on Wed Mar 23 10:10:35 2022
 from distutils.log import debug
 import ttrs_quicfire.build_FF_domain as FF
 import ttrs_quicfire.dat_file_functions as dat
-import ttrs_quicfire.print_inp_files
+import ttrs_quicfire.print_inp_files as print_inp_files
 import ttrs_quicfire.build_shapefiles as bs
 from ttrs_quicfire.exceptions import WindDirOutOfRange, WindSpeedOutOfRange, DataLengthMismatch
 
@@ -70,6 +70,7 @@ class QF_Fuel_Arrays:
         self.use_topo = use_topo
         self.fuel_arrs = [self.rhof,self.moist,self.depth,self.topo]
         self.name_arrs = [self.rhof_name,self.moist_name,self.depth_name,self.topo_name]
+        self.wind_sensors = {}
     
     def export_fuel(self, QF_PATH='default'):
         QF_PATH = self.dom.QF_PATH
@@ -174,15 +175,17 @@ class QF_Fuel_Arrays:
                     z_layer = f_arr[z,:,:]
                     z_layer[~msk] = 0
     
-    def calc_normal_windfield(self, start_speed, start_dir, start_time=0, shift_int=300, SENSOR_HEIGHT=6.1):
+    def calc_normal_windfield(self, start_speed, start_dir, start_time=0, shift_int=300, 
+                              SENSOR_NAME = 'sensor1', SENSOR_X=1, SENSOR_Y=1, SENSOR_HEIGHT=6.1):
         times = list(range(start_time, start_time + self.dom.sim_time + 1, shift_int))
         if start_speed <= 0 or start_speed > 20:
             raise WindSpeedOutOfRange(start_speed)
         if start_dir < 0 or start_dir >= 360:
             raise WindDirOutOfRange(start_dir)
-        self.wind = WindShifts(times, start_speed, start_dir, SENSOR_HEIGHT)
+        self.wind_sensors["sensor1"] = Sensor(times, start_speed, start_dir, SENSOR_NAME, SENSOR_X, SENSOR_Y, SENSOR_HEIGHT)
 
-    def custom_windfield(self, speeds, dirs, times, SENSOR_HEIGHT=6.1):
+    def custom_windfield(self, speeds, dirs, times, SENSOR_NAME = 'sensor1', 
+                         SENSOR_X=1, SENSOR_Y=1, SENSOR_HEIGHT=6.1):
         if len(speeds) != len(times):
             raise DataLengthMismatch('Wind Speeds', len(speeds), 'Wind Times', len(times))
         if len(dirs) != len(times):
@@ -190,26 +193,30 @@ class QF_Fuel_Arrays:
         for speed in speeds:
             if speed <= 0 or speed > 20:
                 raise WindSpeedOutOfRange(speed)
-        for dir in dirs:
-            if dir < 0 or dir >= 360:
-                raise WindDirOutOfRange(dir)
-        self.wind = WindShifts(times, speeds, dirs, SENSOR_HEIGHT, build=False)
+        for d in dirs:
+            if d < 0 or d >= 360:
+                raise WindDirOutOfRange(d)
+        self.wind_sensors[SENSOR_NAME] = Sensor(times, speeds, dirs, SENSOR_NAME, 
+                                                SENSOR_X, SENSOR_Y, SENSOR_HEIGHT, build=False)
 
 #Currently only building normal wind field around
-class WindShifts:
+class Sensor:
     """
     Class creates randomized wind field
     """
-    def __init__(self, times, speed, dir, SENSOR_HEIGHT, build=True):
+    def __init__(self, times, speeds, dirs, SENSOR_NAME, SENSOR_X, SENSOR_Y, SENSOR_HEIGHT, build=True):
         self.times = times
+        self.SENSOR_NAME = SENSOR_NAME
+        self.SENSOR_X = SENSOR_X
+        self.SENSOR_Y = SENSOR_Y
         self.SENSOR_HEIGHT = SENSOR_HEIGHT
         if build:
-            self.dirs = [dir]
-            self.speeds = [speed]
+            self.dirs = [dirs]
+            self.speeds = [speeds]
             self.build_wind_field(len(self.times), self.dirs, self.speeds)
         else:
-            self.dirs = dir
-            self.speeds = speed
+            self.dirs = dirs
+            self.speeds = speeds
     
     def build_wind_field(self, num_values, dirs, speeds):
         for i in range(1,num_values):
@@ -406,8 +413,8 @@ def build_ff_domain(dom, FUEL_PATH = 'default', FF_request=True, use_topo=True):
 
 ###############################################################################
 ###Functions for printing QF inputs
-def build_qf_run(qf_arrs):
-    ttrs_quicfire.print_inp_files.main(qf_arrs)
+def build_qf_run(qf_arrs, manual_dz=False):
+    print_inp_files.main(qf_arrs, manual_dz)
 ###############################################################################
 
 
