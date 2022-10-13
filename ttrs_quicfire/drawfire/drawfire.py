@@ -2,6 +2,18 @@
 # Version date: March 13, 2019
 # @author: Sara Brambilla
 
+###############################################################################
+##Modified by Zachary Cope 10/13/2022
+#Need To:
+    # Add TTRS drawfireplus functions:
+        #Power
+        #ROS and BA
+        #Fire line intensity
+    # Make draw functions load one at a time
+    # Add Arrow to fuel plots
+    # Seperate plot commands
+###############################################################################
+
 import math
 import numpy as np
 import pylab
@@ -33,24 +45,18 @@ def compress_fuel_dens(qf: GridClass, flags: FlagsClass, output_folder: str):
     return fuel_idx, no_fuel_idx
 
 
-def plot_outputs(qu: GridClass, qf: GridClass, ignitions: IgnitionClass, flags: FlagsClass,
-                 gen_gif: int, prj_folder: str, output_folder: str):
-    print("Plotting output files")
-
-    # Setting image specs
-    img_specs = ImgClass(gen_gif)
-    set_image_specifications(img_specs)
-
-    # Create folder to save images
-    create_plots_folder(gen_gif, img_specs, prj_folder)
+def plot_outputs(df_classes: AllDrawFireClasses):
+    #unpack df_classes
+    qu, qf, ignitions, flags, fb, prj_folder, output_folder, gen_vtk, gen_gif, 
+    img_specs, fuel_idx, no_fuel_idx = df_classes.class_list  
 
     if flags.topo > 0:
         print("\t-terrain elevation")
         plot_terrain(qu, img_specs)
 
     if flags.isfire == 1:
-        print("\t-fuel density field")
-        fuel_idx, no_fuel_idx = compress_fuel_dens(qf, flags, output_folder)
+        # print("\t-fuel density field")
+        # fuel_idx, no_fuel_idx = compress_fuel_dens(qf, flags, output_folder)
 
         # ------- Firetech ignitions
         print("\t-initial ignitions")
@@ -193,7 +199,7 @@ def plot_outputs(qu: GridClass, qf: GridClass, ignitions: IgnitionClass, flags: 
     #     plot_QU_winds
 
 
-def import_inputs(prj_folder: str):
+def import_inputs(prj_folder: str=os.getcwd(), gen_vtk: int=0, gen_gif: int=0):
     print("Importing input data")
     output_folder = os.path.join(prj_folder, 'Output')
 
@@ -213,8 +219,21 @@ def import_inputs(prj_folder: str):
     read_topo(flags, qu, qf, prj_folder, output_folder)
     print("\t - importing vertical grid details")
     read_vertical_grid(qu, qf, flags, output_folder)
+    
+    # Setting image specs
+    img_specs = ImgClass(gen_gif)
+    set_image_specifications(img_specs)
 
-    return qu, qf, ignitions, flags, fb, output_folder
+    # Create folder to save images
+    create_plots_folder(gen_gif, img_specs, prj_folder)
+    
+    if flags.isfire == 1:
+        print("\t-fuel density field")
+        fuel_idx, no_fuel_idx = compress_fuel_dens(qf, flags, output_folder)
+    else: fuel_idx = no_fuel_idx = None
+    
+    return AllDrawFireClasses(qu, qf, ignitions, flags, fb, prj_folder, output_folder, 
+                       gen_vtk, gen_gif, img_specs, fuel_idx, no_fuel_idx)
 
 
 def export_vtk(qf: GridClass, qu: GridClass, flags: FlagsClass):
@@ -291,17 +310,16 @@ def export_vtk(qf: GridClass, qu: GridClass, flags: FlagsClass):
 def main(prj_folder: str=os.getcwd(), gen_vtk: int=0, gen_gif: int=0):
 
     # read input files
-    qu, qf, ignitions, flags, fb, output_folder = import_inputs(prj_folder)
+    df_classes = import_inputs(prj_folder, gen_vtk, gen_gif)
 
     # plot outputs
-    plot_outputs(qu, qf, ignitions, flags, gen_gif, prj_folder, output_folder)
+    plot_outputs(df_classes)
 
     # VTK
     if gen_vtk == 1:
         export_vtk(qf, qu, flags)
 
     print("Program terminated")
-
 
 if __name__ == '__main__':
     # Parameters:

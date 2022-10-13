@@ -2,6 +2,27 @@
 # Version date: Nov 07, 2021
 # @author: Sara Brambilla
 
+class AllDrawFireClasses:
+    """
+    Class of all classes and information used in plot funtions
+    """
+    def __init__(self,qu, qf, ignitions, flags, fb, prj_folder, output_folder, 
+                 gen_vtk, gen_gif, img_specs, fuel_idx, no_fuel_idx):
+        self.qu = qu
+        self.qf = qf
+        self.ignitions = ignitions
+        self.flags = flags
+        self.fb = fb
+        self.prj_folder = prj_folder
+        self.output_folder = output_folder
+        self.gen_vtk = gen_vtk
+        self.gen_gif = gen_gif
+        self.img_specs = img_specs
+        self.class_list = [qu, qf, ignitions, flags, fb, prj_folder, 
+                           output_folder, gen_vtk, gen_gif, img_specs,
+                           fuel_idx, no_fuel_idx]
+    
+
 class FirebrandClass:
     def __init__(self):
         self.i = None
@@ -9,7 +30,7 @@ class FirebrandClass:
         self.k = None
         self.state = None
         self.time = None
-
+        
 
 class ImgClass:
     def __init__(self, gen_gif=0):
