@@ -9,7 +9,7 @@ Created on Wed Mar 23 10:10:35 2022
 from distutils.log import debug
 import ttrs_quicfire.build_FF_domain as FF
 import ttrs_quicfire.dat_file_functions as dat
-import ttrs_quicfire.print_inp_files
+import ttrs_quicfire.print_inp_files as print_inp_files
 import ttrs_quicfire.build_shapefiles as bs
 from ttrs_quicfire.exceptions import WindDirOutOfRange, WindSpeedOutOfRange, DataLengthMismatch
 
@@ -182,7 +182,7 @@ class QF_Fuel_Arrays:
             raise WindSpeedOutOfRange(start_speed)
         if start_dir < 0 or start_dir >= 360:
             raise WindDirOutOfRange(start_dir)
-        self.wind_sensors.append(Sensor(times, start_speed, start_dir, SENSOR_HEIGHT, SENSOR_NAME, SENSOR_X, SENSOR_Y, SENSOR_HEIGHT))
+        self.wind_sensors["sensor1"] = Sensor(times, start_speed, start_dir, SENSOR_NAME, SENSOR_X, SENSOR_Y, SENSOR_HEIGHT)
 
     def custom_windfield(self, speeds, dirs, times, SENSOR_NAME = 'sensor1', 
                          SENSOR_X=1, SENSOR_Y=1, SENSOR_HEIGHT=6.1):
@@ -414,7 +414,7 @@ def build_ff_domain(dom, FUEL_PATH = 'default', FF_request=True, use_topo=True):
 ###############################################################################
 ###Functions for printing QF inputs
 def build_qf_run(qf_arrs, manual_dz=False):
-    ttrs_quicfire.print_inp_files.main(qf_arrs, manual_dz)
+    print_inp_files.main(qf_arrs, manual_dz)
 ###############################################################################
 
 
