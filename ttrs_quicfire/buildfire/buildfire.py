@@ -7,11 +7,11 @@ Created on Wed Mar 23 10:10:35 2022
 
 #TT Libraries
 from distutils.log import debug
-import build_FF_domain as FF
-import ttrs_quicfire.dat_file_functions as dat
-import ttrs_quicfire.print_inp_files as print_inp_files
-import ttrs_quicfire.build_shapefiles as bs
-from ttrs_quicfire.exceptions import WindDirOutOfRange, WindSpeedOutOfRange, DataLengthMismatch
+from . import build_FF_domain as FF
+from . import dat_file_functions as dat
+from . import print_inp_files as print_inp_files
+from . import build_shapefiles as bs
+from .exceptions import WindDirOutOfRange, WindSpeedOutOfRange, DataLengthMismatch
 
 #Standard Libraries
 #import geopandas as gpd

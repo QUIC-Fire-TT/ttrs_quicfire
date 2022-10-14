@@ -8,3 +8,14 @@ __pycache__/
 
 # MacOS Specific
 .DS_Store
+
+### Testing/Running Files ###
+EXAMPLE_SETUP/
+FF_Fuel/
+FilesToCopy/
+Run/
+Shapefiles/
+quicfire_311
+### Testing Exceptions
+!EXAMPLE_SETUP/Shapefiles/
+!EXAMPLE_SETUP/main.py
