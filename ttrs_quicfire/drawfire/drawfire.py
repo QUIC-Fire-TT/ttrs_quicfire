@@ -14,6 +14,7 @@
     # Seperate plot commands
 ###############################################################################
 
+#Import python packages
 import math
 import numpy as np
 import pylab
@@ -22,10 +23,11 @@ import os
 import sys
 import copy
 from pyevtk.hl import gridToVTK
-from class_def import *
-from read_inputs import *
-from misc import *
-from gen_images import *
+#Import application scripts
+from .class_def import *
+from .read_inputs import *
+from .misc import *
+from .gen_images import *
 
 
 def compress_fuel_dens(qf: GridClass, flags: FlagsClass, output_folder: str):
@@ -49,10 +51,9 @@ def plot_outputs(df_classes: AllDrawFireClasses):
     #unpack df_classes
     qu, qf, ignitions, flags, fb, prj_folder, output_folder, gen_vtk, gen_gif, 
     img_specs, fuel_idx, no_fuel_idx = df_classes.class_list  
-
-    if flags.topo > 0:
-        print("\t-terrain elevation")
-        plot_terrain(qu, img_specs)
+    
+    #plot terrain
+    plot_terrain(df_classes)
 
     if flags.isfire == 1:
         # print("\t-fuel density field")

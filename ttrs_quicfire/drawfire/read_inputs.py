@@ -2,13 +2,13 @@
 # Version date: Nov 07, 2021
 # @author: Sara Brambilla
 
+#Import python packages
 import sys
 import numpy as np
 import copy
 import os
-from class_def import *
-from misc import *
-
+#Import application scripts
+from .class_def import *
 
 def get_line(fid, fun):
     # http://stackoverflow.com/questions/4289331/python-extract-numbers-from-a-string
@@ -19,6 +19,14 @@ def get_line(fid, fun):
         out = []
     return out
 
+def open_file(filename: str, howto: str):
+    try:
+        fid = open(filename, howto)
+        return fid
+    except IOError:
+        print("Error while opening " + filename)
+        input("PRESS ENTER TO CONTINUE.")
+        sys.exit()
 
 def read_ground_fuel_height(qf: GridClass, output_folder: str):
     fid = open_file(os.path.join(output_folder, "groundfuelheight.bin"), "rb")
@@ -449,3 +457,4 @@ def read_fire_grid_indexing(qf: GridClass, output_folder: str):
     qf.indexing.ijk = qf.indexing.ijk.astype(int)
     qf.indexing.ijk -= 1
     fid.close()
+

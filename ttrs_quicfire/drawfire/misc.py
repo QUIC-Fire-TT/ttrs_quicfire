@@ -2,10 +2,12 @@
 # Version date: Nov 07, 2021
 # @author: Sara Brambilla
 
+#Import python packages
 import os
 import shutil
-from class_def import *
-from read_inputs import *
+#Import application scripts
+from .class_def import *
+from .read_inputs import *
 
 
 def create_plots_folder(gen_gif, img_specs: ImgClass, prj_folder: str):
@@ -21,17 +23,6 @@ def create_plots_folder(gen_gif, img_specs: ImgClass, prj_folder: str):
         os.mkdir(img_specs.gif_dir)
     else:
         img_specs.gif_dir = []
-
-
-def open_file(filename: str, howto: str):
-    try:
-        fid = open(filename, howto)
-        return fid
-    except IOError:
-        print("Error while opening " + filename)
-        input("PRESS ENTER TO CONTINUE.")
-        sys.exit()
-
 
 def get_times(is_ave_time: bool, q: GridClass):
     if is_ave_time is True:

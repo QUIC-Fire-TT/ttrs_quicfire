@@ -7,7 +7,7 @@ Created on Wed Mar 23 10:10:35 2022
 
 #TT Libraries
 from distutils.log import debug
-import ttrs_quicfire.build_FF_domain as FF
+import build_FF_domain as FF
 import ttrs_quicfire.dat_file_functions as dat
 import ttrs_quicfire.print_inp_files as print_inp_files
 import ttrs_quicfire.build_shapefiles as bs

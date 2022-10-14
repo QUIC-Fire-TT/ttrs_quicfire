@@ -4,11 +4,11 @@ TTRS-QF
 A simple fire modeling library.
 """
 
-#from . import buildfire
-#from . import drawfire
-
-from .buildfire import buildfire
-from .drawfire import drawfire
+#https://docs.python.org/3/tutorial/modules.html#importing-from-a-package
+# __all__ = ["buildfire", "drawfire"]
+# __all__ = ["drawfire.drawfire"]
+__all__ = ["drawfire"]
+from ttrs_quicfire import *
 
 __version__="2.0.0"
 __author__="Zachary Cope"

@@ -2,15 +2,16 @@
 # Version date: Nov 07, 2021
 # @author: Sara Brambilla
 
+#Import python packages
 import math
-
 import numpy as np
 import pylab
 import imageio
 from matplotlib.colors import Normalize
-from misc import *
 from matplotlib import pyplot as plt
 import matplotlib.cm as cm
+#Import application scripts
+from .misc import *
 
 
 def generate_greys_colorbar():
@@ -671,98 +672,103 @@ def plot_firebrands(fuel_dens: list, ignitions: np.array, qf: GridClass,
         pylab.close()
 
 
-def plot_terrain(qu: GridClass, img_specs: ImgClass):
-    # 2D terrain plot
-    my_cmap = generate_jet_colorbar(65)
-    my_cmap = pylab.matplotlib.colors.ListedColormap(my_cmap, 'my_colormap', N=None)
-
-    myvmin = np.min(qu.terrain_elevation)
-    myvmax = np.max(qu.terrain_elevation)
-    check_equal_cbar_limits(myvmin, myvmax)
-
-    fig = pylab.figure(figsize=(img_specs.figure_size[0], img_specs.figure_size[1]))
-    ax = fig.add_subplot(111)
-    pylab.imshow(np.transpose(qu.terrain_elevation),
-                 cmap=my_cmap,
-                 interpolation='none',
-                 origin='lower',
-                 extent=qu.horizontal_extent,
-                 vmin=myvmin,
-                 vmax=myvmax)
-    cbar = pylab.colorbar()
-    cbar.ax.tick_params(labelsize=img_specs.colorbar_font["size"])
-
-    pylab.xlabel('X [m]', **img_specs.axis_font)
-    pylab.ylabel('Y [m]', **img_specs.axis_font)
-    cbar.set_label('Terrain elevaltion [m]', **img_specs.axis_font)
-
-    set_ticks_font(img_specs.axis_font, ax)
-    pylab.savefig(os.path.join(img_specs.save_dir, 'TerrainElevation.png'))
-    pylab.close()
-
-    # 3D terrain plot
-    fig = pylab.figure(figsize=(img_specs.figure_size[0], img_specs.figure_size[1]))
-    ax = fig.add_subplot(111, projection="3d")
-    x = np.arange(qu.dx * 0.5, qu.Lx, qu.dx)
-    y = np.arange(qu.dy * 0.5, qu.Ly, qu.dy)
-    x, y = np.meshgrid(x, y)
-    surf_handle = ax.plot_surface(x, y,
-                                  np.transpose(qu.terrain_elevation),
-                                  linewidth=0,
-                                  antialiased=False,
-                                  cmap=my_cmap,
-                                  vmin=myvmin,
-                                  vmax=myvmax)
-
-    ax.set_xlim3d([0., qu.Lx])
-    ax.set_ylim3d([0., qu.Ly])
-    minh = np.min(qu.terrain_elevation)
-    maxh = np.max(qu.terrain_elevation)
-    delta = (maxh - minh) * 0.1
-    ax.set_zlim3d([minh, maxh + delta])
-
-    cbar = fig.colorbar(surf_handle, ax=ax, pad=0.2)
-    cbar.ax.tick_params(labelsize=img_specs.colorbar_font["size"])
-    cbar.set_label('Terrain elevaltion [m]', **img_specs.axis_font)
-
-    ax.set_xlabel('X [m]', **img_specs.axis_font)
-    ax.set_ylabel('Y [m]', **img_specs.axis_font)
-    ax.set_zlabel('Z [m]', **img_specs.axis_font)
-    # pylab.title('Terrain elevation', **img_specs.title_font)
-    set_ticks_font(img_specs.axis_font, ax)
-    ax.xaxis.labelpad = 15
-    ax.yaxis.labelpad = 15
-    ax.zaxis.labelpad = 15
-    # Ticks overlapping on z
-    if (maxh - minh) / max(qu.Lx, qu.Ly) > 1:
-        tickval = np.array([5., 10., 100., 125., 250., 300., 400., 500.])
-        ntickval = len(tickval)
-        n = np.zeros((ntickval,))
-        for i in range(0, ntickval):
-            n[i] = math.ceil((maxh - minh) / tickval[i])
-        nlim = 5
-        k = np.where(n <= nlim)
-        k = k[0][0]
-
-        vs = math.ceil(minh / tickval[k]) * tickval[k]
-        ve = math.ceil(maxh / tickval[k]) * tickval[k]
-        zticks = np.linspace(vs, ve, math.ceil((ve - vs) / tickval[k]))
-    else:
-        if minh > 0:
-            odg = np.floor(np.log10(minh))
-            vs = np.ceil(minh / 10 ** (odg - 1)) * 10 ** (odg - 1)
+def plot_terrain(df_classes: AllDrawFireClasses):
+    qu = df_classes.qu
+    img_specs = df_classes.img_specs
+    
+    if df_classes.flags.topo > 0:
+        print("\t-terrain elevation")
+        # 2D terrain plot
+        my_cmap = generate_jet_colorbar(65)
+        my_cmap = pylab.matplotlib.colors.ListedColormap(my_cmap, 'my_colormap', N=None)
+    
+        myvmin = np.min(qu.terrain_elevation)
+        myvmax = np.max(qu.terrain_elevation)
+        check_equal_cbar_limits(myvmin, myvmax)
+    
+        fig = pylab.figure(figsize=(img_specs.figure_size[0], img_specs.figure_size[1]))
+        ax = fig.add_subplot(111)
+        pylab.imshow(np.transpose(qu.terrain_elevation),
+                     cmap=my_cmap,
+                     interpolation='none',
+                     origin='lower',
+                     extent=qu.horizontal_extent,
+                     vmin=myvmin,
+                     vmax=myvmax)
+        cbar = pylab.colorbar()
+        cbar.ax.tick_params(labelsize=img_specs.colorbar_font["size"])
+    
+        pylab.xlabel('X [m]', **img_specs.axis_font)
+        pylab.ylabel('Y [m]', **img_specs.axis_font)
+        cbar.set_label('Terrain elevaltion [m]', **img_specs.axis_font)
+    
+        set_ticks_font(img_specs.axis_font, ax)
+        pylab.savefig(os.path.join(img_specs.save_dir, 'TerrainElevation.png'))
+        pylab.close()
+    
+        # 3D terrain plot
+        fig = pylab.figure(figsize=(img_specs.figure_size[0], img_specs.figure_size[1]))
+        ax = fig.add_subplot(111, projection="3d")
+        x = np.arange(qu.dx * 0.5, qu.Lx, qu.dx)
+        y = np.arange(qu.dy * 0.5, qu.Ly, qu.dy)
+        x, y = np.meshgrid(x, y)
+        surf_handle = ax.plot_surface(x, y,
+                                      np.transpose(qu.terrain_elevation),
+                                      linewidth=0,
+                                      antialiased=False,
+                                      cmap=my_cmap,
+                                      vmin=myvmin,
+                                      vmax=myvmax)
+    
+        ax.set_xlim3d([0., qu.Lx])
+        ax.set_ylim3d([0., qu.Ly])
+        minh = np.min(qu.terrain_elevation)
+        maxh = np.max(qu.terrain_elevation)
+        delta = (maxh - minh) * 0.1
+        ax.set_zlim3d([minh, maxh + delta])
+    
+        cbar = fig.colorbar(surf_handle, ax=ax, pad=0.2)
+        cbar.ax.tick_params(labelsize=img_specs.colorbar_font["size"])
+        cbar.set_label('Terrain elevaltion [m]', **img_specs.axis_font)
+    
+        ax.set_xlabel('X [m]', **img_specs.axis_font)
+        ax.set_ylabel('Y [m]', **img_specs.axis_font)
+        ax.set_zlabel('Z [m]', **img_specs.axis_font)
+        # pylab.title('Terrain elevation', **img_specs.title_font)
+        set_ticks_font(img_specs.axis_font, ax)
+        ax.xaxis.labelpad = 15
+        ax.yaxis.labelpad = 15
+        ax.zaxis.labelpad = 15
+        # Ticks overlapping on z
+        if (maxh - minh) / max(qu.Lx, qu.Ly) > 1:
+            tickval = np.array([5., 10., 100., 125., 250., 300., 400., 500.])
+            ntickval = len(tickval)
+            n = np.zeros((ntickval,))
+            for i in range(0, ntickval):
+                n[i] = math.ceil((maxh - minh) / tickval[i])
+            nlim = 5
+            k = np.where(n <= nlim)
+            k = k[0][0]
+    
+            vs = math.ceil(minh / tickval[k]) * tickval[k]
+            ve = math.ceil(maxh / tickval[k]) * tickval[k]
+            zticks = np.linspace(vs, ve, math.ceil((ve - vs) / tickval[k]))
         else:
-            vs = 0.
-        odg = np.floor(np.log10(maxh))
-        ve = np.ceil(maxh / 10**(odg-1)) *10**(odg-1)
-        zticks = np.array([vs, (ve+vs)*0.5, ve])
-
-    ax.set_zticks(zticks)
-    # Aspect ratio 3d
-    ax.set_box_aspect((np.ptp(x), np.ptp(y), np.ptp(qu.terrain_elevation)))
-
-    pylab.savefig(os.path.join(img_specs.save_dir, 'TerrainElevation3d.png'))
-    pylab.close()
+            if minh > 0:
+                odg = np.floor(np.log10(minh))
+                vs = np.ceil(minh / 10 ** (odg - 1)) * 10 ** (odg - 1)
+            else:
+                vs = 0.
+            odg = np.floor(np.log10(maxh))
+            ve = np.ceil(maxh / 10**(odg-1)) *10**(odg-1)
+            zticks = np.array([vs, (ve+vs)*0.5, ve])
+    
+        ax.set_zticks(zticks)
+        # Aspect ratio 3d
+        ax.set_box_aspect((np.ptp(x), np.ptp(y), np.ptp(qu.terrain_elevation)))
+    
+        pylab.savefig(os.path.join(img_specs.save_dir, 'TerrainElevation3d.png'))
+        pylab.close()
 
 
 def plot_ignitions(qf: GridClass, fuel_dens_idx: np.array, ignitions: np.array, myextent: list,
