@@ -61,8 +61,10 @@ def plot_outputs(df_classes: AllDrawFireClasses):
 
         # ------- Firetech ignitions
         print("\t-initial ignitions")
-        plot_ignitions(qf, fuel_idx, ignitions.hor_plane, qf.horizontal_extent, img_specs)
+        plot_ignitions(df_classes)
+        #plot_ignitions(qf, fuel_idx, ignitions.hor_plane, qf.horizontal_extent, img_specs)
 
+        #WORKING Here
         # ------- fuel height (ground level only)
         print("\t-ground level fuel height")
         ground_level_fuel_height = read_ground_fuel_height(qf, output_folder)

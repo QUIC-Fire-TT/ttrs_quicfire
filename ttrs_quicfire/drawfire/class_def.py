@@ -18,6 +18,8 @@ class AllDrawFireClasses:
         self.gen_vtk = gen_vtk
         self.gen_gif = gen_gif
         self.img_specs = img_specs
+        self.fuel_idx = fuel_idx
+        self.no_fuel_idx = no_fuel_idx
         self.class_list = [qu, qf, ignitions, flags, fb, prj_folder, 
                            output_folder, gen_vtk, gen_gif, img_specs,
                            fuel_idx, no_fuel_idx]

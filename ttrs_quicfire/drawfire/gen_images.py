@@ -79,6 +79,9 @@ def generate_greys_colorbar():
 
     return mycbar
 
+def generate_standard_colorbar(m: int, cmap_name:str='YlGn'):
+    cmap = cm.get_cmap(cmap_name, 256)
+    return cmap(np.linspace(0, 1, m))
 
 def generate_jet_colorbar(m: int):
     n = int(math.ceil(float(m) / 4.))
@@ -672,15 +675,20 @@ def plot_firebrands(fuel_dens: list, ignitions: np.array, qf: GridClass,
         pylab.close()
 
 
-def plot_terrain(df_classes: AllDrawFireClasses):
+def plot_terrain(df_classes: AllDrawFireClasses, color_map_jet=False):
     qu = df_classes.qu
     img_specs = df_classes.img_specs
     
     if df_classes.flags.topo > 0:
         print("\t-terrain elevation")
-        # 2D terrain plot
-        my_cmap = generate_jet_colorbar(65)
-        my_cmap = pylab.matplotlib.colors.ListedColormap(my_cmap, 'my_colormap', N=None)
+        
+        if not color_map_jet:
+            my_cmap = generate_standard_colorbar(65, 'summer')
+            my_cmap = pylab.matplotlib.colors.ListedColormap(my_cmap, 'my_colormap', N=None)
+        else:
+            # 2D terrain plot
+            my_cmap = generate_jet_colorbar(65)
+            my_cmap = pylab.matplotlib.colors.ListedColormap(my_cmap, 'my_colormap', N=None)
     
         myvmin = np.min(qu.terrain_elevation)
         myvmax = np.max(qu.terrain_elevation)
@@ -771,37 +779,43 @@ def plot_terrain(df_classes: AllDrawFireClasses):
         pylab.close()
 
 
-def plot_ignitions(qf: GridClass, fuel_dens_idx: np.array, ignitions: np.array, myextent: list,
-                   img_specs: ImgClass):
-    # Define colormap
-    # http://matplotlib.org/api/colors_api.html
-    mycol = [[1., 1., 1.], [0.765, 0.765, 0.765], [1., 0., 0.]]
-    my_cmap = pylab.matplotlib.colors.ListedColormap(mycol, 'my_colormap', N=None)
-
-    currval = np.zeros((qf.ny, qf.nx))
-    currval[fuel_dens_idx] = 1
-    inds = np.where(ignitions > 0)
-    currval[inds] = 2
-
-    fig = pylab.figure(figsize=(img_specs.figure_size[0], img_specs.figure_size[1]))
-    ax = fig.add_subplot(111)
-
-    pylab.imshow(currval,
-                 cmap=my_cmap,
-                 interpolation='none',
-                 origin='lower',
-                 extent=myextent,
-                 vmin=-0.5,
-                 vmax=2.5)
-    cbar = pylab.colorbar(ticks=[0, 1, 2])
-    cbar.ax.set_yticklabels(['No fuel', 'Fuel', 'Ignitions'])
-    cbar.ax.tick_params(labelsize=img_specs.colorbar_font["size"])
-
-    pylab.xlabel('X [m]', **img_specs.axis_font)
-    pylab.ylabel('Y [m]', **img_specs.axis_font)
-    pylab.title('Selected ignitions # %d' % len(inds[0]), **img_specs.title_font)
-
-    set_ticks_font(img_specs.axis_font, ax)
-
-    pylab.savefig(os.path.join(img_specs.save_dir, 'InitialIgnitions.png'))
-    pylab.close()
+def plot_ignitions(df_classes: AllDrawFireClasses):
+    if df_classes.flags.isfire == 1:
+        qf = df_classes.qf  
+        fuel_dens_idx = df_classes.fuel_idx
+        ignitions = df_classes.ignitions.hor_plane
+        myextent = df_classes.qf.horizontal_extent
+        img_specs = df_classes.img_specs
+        
+        # Define colormap
+        # http://matplotlib.org/api/colors_api.html
+        mycol = [[1., 1., 1.], [0.765, 0.765, 0.765], [1., 0., 0.]]
+        my_cmap = pylab.matplotlib.colors.ListedColormap(mycol, 'my_colormap', N=None)
+    
+        currval = np.zeros((qf.ny, qf.nx))
+        currval[fuel_dens_idx] = 1
+        inds = np.where(ignitions > 0)
+        currval[inds] = 2
+    
+        fig = pylab.figure(figsize=(img_specs.figure_size[0], img_specs.figure_size[1]))
+        ax = fig.add_subplot(111)
+    
+        pylab.imshow(currval,
+                     cmap=my_cmap,
+                     interpolation='none',
+                     origin='lower',
+                     extent=myextent,
+                     vmin=-0.5,
+                     vmax=2.5)
+        cbar = pylab.colorbar(ticks=[0, 1, 2])
+        cbar.ax.set_yticklabels(['No fuel', 'Fuel', 'Ignitions'])
+        cbar.ax.tick_params(labelsize=img_specs.colorbar_font["size"])
+    
+        pylab.xlabel('X [m]', **img_specs.axis_font)
+        pylab.ylabel('Y [m]', **img_specs.axis_font)
+        pylab.title('Selected ignitions # %d' % len(inds[0]), **img_specs.title_font)
+    
+        set_ticks_font(img_specs.axis_font, ax)
+    
+        pylab.savefig(os.path.join(img_specs.save_dir, 'InitialIgnitions.png'))
+        pylab.close()
