@@ -38,9 +38,9 @@ def compress_fuel_dens(qf: GridClass, flags: FlagsClass, output_folder: str):
         temp_ntimes = 1
         temp_time = [qf.time[0]]
 
-    fuel_dens = read_fireca_field("fuels-dens-", temp_ntimes, temp_time, qf, 0, output_folder)
+    fuel_dens = read_fireca_field_NEW("fuels-dens-00000.bin", qf, 0, output_folder)
 
-    fuel_dens_compressed = np.sum(fuel_dens[0], axis=2)
+    fuel_dens_compressed = np.sum(fuel_dens, axis=2)
     fuel_idx = np.where(fuel_dens_compressed > 0)
     no_fuel_idx = np.where(fuel_dens_compressed == 0)
 
@@ -62,36 +62,21 @@ def plot_outputs(df_classes: AllDrawFireClasses):
         # ------- Firetech ignitions
         print("\t-initial ignitions")
         plot_ignitions(df_classes)
-        #plot_ignitions(qf, fuel_idx, ignitions.hor_plane, qf.horizontal_extent, img_specs)
 
-        #WORKING Here
         # ------- fuel height (ground level only)
         print("\t-ground level fuel height")
-        ground_level_fuel_height = read_ground_fuel_height(qf, output_folder)
-        plot_fuelheight(qf, ground_level_fuel_height, img_specs)
-        del ground_level_fuel_height
+        plot_fuelheight(df_classes)
 
         # ------- mass burnt (vertically-integrated)
         if flags.perc_mass_burnt == 1:
             print("\t-% mass burnt")
-            perc_mass_burnt = read_fireca_field("mburnt_integ-", qf.ntimes, qf.time, qf, 1, output_folder)
-            plot_percmassburnt(qf, perc_mass_burnt, no_fuel_idx, img_specs, flags)
-            del perc_mass_burnt
+            plot_percmassburnt(df_classes)
 
         # ------- Fuel mass
         if flags.fuel_density == 1:
-            fuel_dens = read_fireca_field("fuels-dens-", qf.ntimes, qf.time, qf, 0, output_folder)
-            if qf.dx == 2:
-                all_planes = (1, 2, 5, 8, 10, 12)
-            else:
-                all_planes = list([1])
-            for iplane in all_planes:
-                if iplane <= qf.nz:
-                    print("\t-fuel mass, plane: %d" % iplane)
-                    plot_2d_field(False, qf, iplane, 'xy', fuel_dens, "Fuel density [kg/m^3]", "fuel_dens",
-                                  [0., np.amax(fuel_dens[0][::1, ::1, iplane-1], axis=None)], img_specs,
-                                  no_fuel_idx, flags)
-            del fuel_dens
+            #WORKING
+            plot_fueldens(df_classes)
+            
 
         plane = 1
         # ------- Emissions

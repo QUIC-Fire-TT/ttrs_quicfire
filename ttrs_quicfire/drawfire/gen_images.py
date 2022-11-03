@@ -12,6 +12,7 @@ from matplotlib import pyplot as plt
 import matplotlib.cm as cm
 #Import application scripts
 from .misc import *
+from .read_inputs import *
 
 
 def generate_greys_colorbar():
@@ -116,7 +117,11 @@ def generate_jet_colorbar(m: int):
     return j
 
 
-def plot_fuelheight(qf: GridClass, ground_level_fuel_height: np.array, img_specs: ImgClass):
+def plot_fuelheight(df_classes: AllDrawFireClasses):
+    qf = df_classes.qf
+    img_specs = df_classes.img_specs
+    output_folder = df_classes.output_folder
+    ground_level_fuel_height = read_ground_fuel_height(qf, output_folder)
 
     myvmax = np.max(ground_level_fuel_height)
     myvmin = -myvmax/64. - 1e-6
@@ -214,145 +219,301 @@ def get_mass_burnt(fuel_dens_idx: np.ndarray, icolor_scheme: int, currval0: np.a
     return currval
 
 
-def plot_percmassburnt(qf: GridClass, plotvar: list, fuel_dens_idx: np.ndarray,
-                       img_specs: ImgClass, flags: FlagsClass):
-    ncol = 64
+def plot_percmassburnt(df_classes: AllDrawFireClasses):
 
-    # Nan where there is no fuel
-    currval0 = np.zeros((qf.ny, qf.nx), dtype=np.float32)
-    currval0[fuel_dens_idx] = np.nan
-
-    # Colormap scheme
-    [usr_colormap, myvmin, myvmax] = set_colormap_massburnt(ncol)
-
-    colorbar_label = ["Mass burnt (vertically-integ.) [%]", ""]
-    savestr = ['perc_mass_burnt', 'bw_perc_mass_burnt']
-
-    # 2D plot
-    for icolor_scheme in range(0, 2):
-        file_list = []
-
-        for i in range(0, qf.ntimes):
-            print("     * time %d/%d" % (i + 1, qf.ntimes))
-
-            currval = get_mass_burnt(fuel_dens_idx, icolor_scheme, currval0, plotvar[i].squeeze())
-
-            fig = pylab.figure(figsize=(img_specs.figure_size[0], img_specs.figure_size[1]))
-            ax = fig.add_subplot(111)
-
-            pylab.imshow(currval,
-                         cmap=usr_colormap[icolor_scheme],
-                         interpolation='none',
-                         origin='lower',
-                         extent=qf.horizontal_extent,
-                         vmin=myvmin[icolor_scheme],
-                         vmax=myvmax[icolor_scheme])
-            cbar = pylab.colorbar()
-            cbar.set_label(colorbar_label[icolor_scheme],
-                           size=img_specs.axis_font["size"],
-                           fontname=img_specs.axis_font["fontname"])
-            if icolor_scheme == 1:
-                cbar.set_ticks([0.5, 1.5, 2.5])
-                cbar.set_ticklabels(['No Fuel', 'Burnt', 'Unburnt'])
-            cbar.ax.tick_params(labelsize=img_specs.colorbar_font["size"])
-            pylab.xlabel('X [m]', **img_specs.axis_font)
-            pylab.ylabel('Y [m]', **img_specs.axis_font)
-            pylab.title('Time = %s s' % qf.time[i], **img_specs.title_font)
-            set_ticks_font(img_specs.axis_font, ax)
-            fname = '%s_Time_%d_s.png' % (savestr[icolor_scheme], qf.time[i])
-            fname = os.path.join(img_specs.save_dir, fname)
-            pylab.savefig(fname)
-            pylab.close()
-            del currval
-
+    qf = df_classes.qf
+    fuel_dens_idx = df_classes.no_fuel_idx
+    img_specs = df_classes.img_specs
+    flags = df_classes.flags
+    output_folder = df_classes.output_folder
+    
+    ##Load one at a time
+    #plotvar = read_fireca_field("mburnt_integ-", qf.ntimes, qf.time, qf, 1, output_folder)
+    
+    #Read in output files
+    files_names = list_output_files("mburnt_integ-", output_folder)
+    
+    if flags.isfire == 1 and flags.perc_mass_burnt == 1:
+        ncol = 64
+    
+        # Nan where there is no fuel
+        currval0 = np.zeros((qf.ny, qf.nx), dtype=np.float32)
+        currval0[fuel_dens_idx] = np.nan
+    
+        # Colormap scheme
+        [usr_colormap, myvmin, myvmax] = set_colormap_massburnt(ncol)
+    
+        colorbar_label = ["Mass burnt (vertically-integ.) [%]", ""]
+        savestr = ['perc_mass_burnt', 'bw_perc_mass_burnt']
+    
+        # 2D plot
+        for icolor_scheme in range(0, 2):
+            file_list = []
+    
+            for i,k in enumerate(files_names.keys()):
+                print("     * time %d/%d" % (i + 1, qf.ntimes))
+                
+                plotvar = read_fireca_field_NEW(files_names[k], qf, 1, output_folder)
+                currval = get_mass_burnt(fuel_dens_idx, icolor_scheme, currval0, plotvar.squeeze())
+    
+                fig = pylab.figure(figsize=(img_specs.figure_size[0], img_specs.figure_size[1]))
+                ax = fig.add_subplot(111)
+    
+                pylab.imshow(currval,
+                             cmap=usr_colormap[icolor_scheme],
+                             interpolation='none',
+                             origin='lower',
+                             extent=qf.horizontal_extent,
+                             vmin=myvmin[icolor_scheme],
+                             vmax=myvmax[icolor_scheme])
+                cbar = pylab.colorbar()
+                cbar.set_label(colorbar_label[icolor_scheme],
+                               size=img_specs.axis_font["size"],
+                               fontname=img_specs.axis_font["fontname"])
+                if icolor_scheme == 1:
+                    cbar.set_ticks([0.5, 1.5, 2.5])
+                    cbar.set_ticklabels(['No Fuel', 'Burnt', 'Unburnt'])
+                cbar.ax.tick_params(labelsize=img_specs.colorbar_font["size"])
+                pylab.xlabel('X [m]', **img_specs.axis_font)
+                pylab.ylabel('Y [m]', **img_specs.axis_font)
+                pylab.title('Time = %s s' % qf.time[i], **img_specs.title_font)
+                set_ticks_font(img_specs.axis_font, ax)
+                fname = '%s_Time_%d_s.png' % (savestr[icolor_scheme], qf.time[i])
+                fname = os.path.join(img_specs.save_dir, fname)
+                pylab.savefig(fname)
+                pylab.close()
+                del currval
+    
+                if img_specs.gen_gif == 1:
+                    file_list.append(fname)
+    
             if img_specs.gen_gif == 1:
-                file_list.append(fname)
-
-        if img_specs.gen_gif == 1:
-            fname_gif = '%s.gif' % savestr
-            fname_gif = os.path.join(img_specs.gif_dir, fname_gif)
-            make_gif(fname_gif, file_list)
-
-    # 3D plot on terrain
-    if flags.topo > 0:
-        # m = cm.ScalarMappable(cmap='Greys')
-        greys_map_array = generate_greys_colorbar()
-        n = np.shape(greys_map_array)
-        ncol = n[0]
-        greys_map = pylab.matplotlib.colors.ListedColormap(greys_map_array, 'my_colormap', N=None)
-        greys_map.set_bad(color='none')
-        file_list = []
-        myvmax = np.max(qf.terrain_elevation) + 1.e-6
-        myvmin = np.min(qf.terrain_elevation) - 1.e-6
-        delta = (myvmax - myvmin) / (ncol - 1)
-        myvmin -= delta
-
-        val = np.linspace(myvmin, myvmax, ncol + 1)
-
-        x = np.linspace(qf.dx * 0.5, qf.Lx - qf.dx * 0.5, qf.nx)
-        y = np.linspace(qf.dy * 0.5, qf.Ly - qf.dy * 0.5, qf.ny)
-        x, y = np.meshgrid(x, y)
-
-        # color by terrain elevation
-        currval0 = np.ones((qf.ny, qf.nx, 4))
-        for ival in range(0, ncol):
-            ii, jj = np.where((val[ival] <= qf.terrain_elevation) & (qf.terrain_elevation < val[ival + 1]))
-            for m in range(0, len(ii)):
-                currval0[jj[m], ii[m], 0:-1] = greys_map_array[ival]
-
-        for i in range(1, qf.ntimes):
-            print("     * time (3d) %d/%d" % (i + 1, qf.ntimes))
-
-            currval = copy.deepcopy(currval0)
-            loc_var = plotvar[i].squeeze()
-            k_loc = np.where(loc_var > 0.)
-            if len(k_loc) > 0:
-                i_loc = k_loc[1]
-                j_loc = k_loc[0]
-                for m in range(0, len(i_loc)):
-                    for icol in range(0, 3):
-                        currval[j_loc[m], i_loc[m], icol] = greys_map_array[0][icol]
-                    currval[j_loc[m], i_loc[m], 3] = 1
-
-            fig = pylab.figure(figsize=(img_specs.figure_size[0], img_specs.figure_size[1]))
-            ax = fig.add_subplot(111, projection="3d")
-
-            surf = ax.plot_surface(x, y, np.transpose(qf.terrain_elevation),
-                                   facecolors=currval,
-                                   vmin=myvmin,
-                                   vmax=myvmax,
-                                   linewidth=0,
-                                   cmap=greys_map,
-                                   antialiased=True,
-                                   shade=True,
-                                   edgecolors='none',
-                                   color='none',
-                                   rcount=max(qf.nx,qf.ny),
-                                   ccount=max(qf.nx,qf.ny))
-
-            cbar = fig.colorbar(surf, shrink=0.5, aspect=5)
-            cbar.set_label('Terrain elevation [m]', size=img_specs.axis_font["size"], fontname=img_specs.axis_font["fontname"])
-            cbar.ax.tick_params(labelsize=img_specs.colorbar_font["size"])
-
-            pylab.xlabel('X [m]', **img_specs.axis_font)
-            pylab.ylabel('Y [m]', **img_specs.axis_font)
-            pylab.title('Time = %s s' % qf.time[i], **img_specs.title_font)
-            set_ticks_font(img_specs.axis_font, ax)
-            ax.set_xlim3d([0, qf.Lx])
-            ax.set_ylim3d([0, qf.Ly])
-            fname = '%s_Time_%d_s.png' % (savestr, qf.time[i])
-            fname = os.path.join(img_specs.save_dir, fname)
-            pylab.savefig(fname)
-            pylab.close()
-            del currval
-            del loc_var
+                fname_gif = '%s.gif' % savestr
+                fname_gif = os.path.join(img_specs.gif_dir, fname_gif)
+                make_gif(fname_gif, file_list)
+    
+        # 3D plot on terrain
+        if flags.topo > 0:
+            # m = cm.ScalarMappable(cmap='Greys')
+            greys_map_array = generate_greys_colorbar()
+            n = np.shape(greys_map_array)
+            ncol = n[0]
+            greys_map = pylab.matplotlib.colors.ListedColormap(greys_map_array, 'my_colormap', N=None)
+            greys_map.set_bad(color='none')
+            file_list = []
+            myvmax = np.max(qf.terrain_elevation) + 1.e-6
+            myvmin = np.min(qf.terrain_elevation) - 1.e-6
+            delta = (myvmax - myvmin) / (ncol - 1)
+            myvmin -= delta
+    
+            val = np.linspace(myvmin, myvmax, ncol + 1)
+    
+            x = np.linspace(qf.dx * 0.5, qf.Lx - qf.dx * 0.5, qf.nx)
+            y = np.linspace(qf.dy * 0.5, qf.Ly - qf.dy * 0.5, qf.ny)
+            x, y = np.meshgrid(x, y)
+    
+            # color by terrain elevation
+            currval0 = np.ones((qf.ny, qf.nx, 4))
+            for ival in range(0, ncol):
+                ii, jj = np.where((val[ival] <= qf.terrain_elevation) & (qf.terrain_elevation < val[ival + 1]))
+                for m in range(0, len(ii)):
+                    currval0[jj[m], ii[m], 0:-1] = greys_map_array[ival]
+    
+            for i in range(1, qf.ntimes):
+                print("     * time (3d) %d/%d" % (i + 1, qf.ntimes))
+    
+                currval = copy.deepcopy(currval0)
+                loc_var = plotvar[i].squeeze()
+                k_loc = np.where(loc_var > 0.)
+                if len(k_loc) > 0:
+                    i_loc = k_loc[1]
+                    j_loc = k_loc[0]
+                    for m in range(0, len(i_loc)):
+                        for icol in range(0, 3):
+                            currval[j_loc[m], i_loc[m], icol] = greys_map_array[0][icol]
+                        currval[j_loc[m], i_loc[m], 3] = 1
+    
+                fig = pylab.figure(figsize=(img_specs.figure_size[0], img_specs.figure_size[1]))
+                ax = fig.add_subplot(111, projection="3d")
+    
+                surf = ax.plot_surface(x, y, np.transpose(qf.terrain_elevation),
+                                       facecolors=currval,
+                                       vmin=myvmin,
+                                       vmax=myvmax,
+                                       linewidth=0,
+                                       cmap=greys_map,
+                                       antialiased=True,
+                                       shade=True,
+                                       edgecolors='none',
+                                       color='none',
+                                       rcount=max(qf.nx,qf.ny),
+                                       ccount=max(qf.nx,qf.ny))
+    
+                cbar = fig.colorbar(surf, shrink=0.5, aspect=5)
+                cbar.set_label('Terrain elevation [m]', size=img_specs.axis_font["size"], fontname=img_specs.axis_font["fontname"])
+                cbar.ax.tick_params(labelsize=img_specs.colorbar_font["size"])
+    
+                pylab.xlabel('X [m]', **img_specs.axis_font)
+                pylab.ylabel('Y [m]', **img_specs.axis_font)
+                pylab.title('Time = %s s' % qf.time[i], **img_specs.title_font)
+                set_ticks_font(img_specs.axis_font, ax)
+                ax.set_xlim3d([0, qf.Lx])
+                ax.set_ylim3d([0, qf.Ly])
+                fname = '%s_Time_%d_s.png' % (savestr, qf.time[i])
+                fname = os.path.join(img_specs.save_dir, fname)
+                pylab.savefig(fname)
+                pylab.close()
+                del currval
+                del loc_var
+                if img_specs.gen_gif == 1:
+                    file_list.append(fname)
+    
             if img_specs.gen_gif == 1:
-                file_list.append(fname)
-
-        if img_specs.gen_gif == 1:
-            fname_gif = '%s.gif' % savestr
-            fname_gif = os.path.join(img_specs.gif_dir, fname_gif)
-            make_gif(fname_gif, file_list)
+                fname_gif = '%s.gif' % savestr
+                fname_gif = os.path.join(img_specs.gif_dir, fname_gif)
+                make_gif(fname_gif, file_list)
+    
+    #This works
+    # plotvar = read_fireca_field("mburnt_integ-", qf.ntimes, qf.time, qf, 1, output_folder)
+    
+    # if flags.isfire == 1 and flags.perc_mass_burnt == 1:
+    #     ncol = 64
+    
+    #     # Nan where there is no fuel
+    #     currval0 = np.zeros((qf.ny, qf.nx), dtype=np.float32)
+    #     currval0[fuel_dens_idx] = np.nan
+    
+    #     # Colormap scheme
+    #     [usr_colormap, myvmin, myvmax] = set_colormap_massburnt(ncol)
+    
+    #     colorbar_label = ["Mass burnt (vertically-integ.) [%]", ""]
+    #     savestr = ['perc_mass_burnt', 'bw_perc_mass_burnt']
+    
+    #     # 2D plot
+    #     for icolor_scheme in range(0, 2):
+    #         file_list = []
+    
+    #         for i in range(0, qf.ntimes):
+    #             print("     * time %d/%d" % (i + 1, qf.ntimes))
+    
+    #             currval = get_mass_burnt(fuel_dens_idx, icolor_scheme, currval0, plotvar[i].squeeze())
+    
+    #             fig = pylab.figure(figsize=(img_specs.figure_size[0], img_specs.figure_size[1]))
+    #             ax = fig.add_subplot(111)
+    
+    #             pylab.imshow(currval,
+    #                          cmap=usr_colormap[icolor_scheme],
+    #                          interpolation='none',
+    #                          origin='lower',
+    #                          extent=qf.horizontal_extent,
+    #                          vmin=myvmin[icolor_scheme],
+    #                          vmax=myvmax[icolor_scheme])
+    #             cbar = pylab.colorbar()
+    #             cbar.set_label(colorbar_label[icolor_scheme],
+    #                            size=img_specs.axis_font["size"],
+    #                            fontname=img_specs.axis_font["fontname"])
+    #             if icolor_scheme == 1:
+    #                 cbar.set_ticks([0.5, 1.5, 2.5])
+    #                 cbar.set_ticklabels(['No Fuel', 'Burnt', 'Unburnt'])
+    #             cbar.ax.tick_params(labelsize=img_specs.colorbar_font["size"])
+    #             pylab.xlabel('X [m]', **img_specs.axis_font)
+    #             pylab.ylabel('Y [m]', **img_specs.axis_font)
+    #             pylab.title('Time = %s s' % qf.time[i], **img_specs.title_font)
+    #             set_ticks_font(img_specs.axis_font, ax)
+    #             fname = '%s_Time_%d_s.png' % (savestr[icolor_scheme], qf.time[i])
+    #             fname = os.path.join(img_specs.save_dir, fname)
+    #             pylab.savefig(fname)
+    #             pylab.close()
+    #             del currval
+    
+    #             if img_specs.gen_gif == 1:
+    #                 file_list.append(fname)
+    
+    #         if img_specs.gen_gif == 1:
+    #             fname_gif = '%s.gif' % savestr
+    #             fname_gif = os.path.join(img_specs.gif_dir, fname_gif)
+    #             make_gif(fname_gif, file_list)
+    
+    #     # 3D plot on terrain
+    #     if flags.topo > 0:
+    #         # m = cm.ScalarMappable(cmap='Greys')
+    #         greys_map_array = generate_greys_colorbar()
+    #         n = np.shape(greys_map_array)
+    #         ncol = n[0]
+    #         greys_map = pylab.matplotlib.colors.ListedColormap(greys_map_array, 'my_colormap', N=None)
+    #         greys_map.set_bad(color='none')
+    #         file_list = []
+    #         myvmax = np.max(qf.terrain_elevation) + 1.e-6
+    #         myvmin = np.min(qf.terrain_elevation) - 1.e-6
+    #         delta = (myvmax - myvmin) / (ncol - 1)
+    #         myvmin -= delta
+    
+    #         val = np.linspace(myvmin, myvmax, ncol + 1)
+    
+    #         x = np.linspace(qf.dx * 0.5, qf.Lx - qf.dx * 0.5, qf.nx)
+    #         y = np.linspace(qf.dy * 0.5, qf.Ly - qf.dy * 0.5, qf.ny)
+    #         x, y = np.meshgrid(x, y)
+    
+    #         # color by terrain elevation
+    #         currval0 = np.ones((qf.ny, qf.nx, 4))
+    #         for ival in range(0, ncol):
+    #             ii, jj = np.where((val[ival] <= qf.terrain_elevation) & (qf.terrain_elevation < val[ival + 1]))
+    #             for m in range(0, len(ii)):
+    #                 currval0[jj[m], ii[m], 0:-1] = greys_map_array[ival]
+    
+    #         for i in range(1, qf.ntimes):
+    #             print("     * time (3d) %d/%d" % (i + 1, qf.ntimes))
+    
+    #             currval = copy.deepcopy(currval0)
+    #             loc_var = plotvar[i].squeeze()
+    #             k_loc = np.where(loc_var > 0.)
+    #             if len(k_loc) > 0:
+    #                 i_loc = k_loc[1]
+    #                 j_loc = k_loc[0]
+    #                 for m in range(0, len(i_loc)):
+    #                     for icol in range(0, 3):
+    #                         currval[j_loc[m], i_loc[m], icol] = greys_map_array[0][icol]
+    #                     currval[j_loc[m], i_loc[m], 3] = 1
+    
+    #             fig = pylab.figure(figsize=(img_specs.figure_size[0], img_specs.figure_size[1]))
+    #             ax = fig.add_subplot(111, projection="3d")
+    
+    #             surf = ax.plot_surface(x, y, np.transpose(qf.terrain_elevation),
+    #                                    facecolors=currval,
+    #                                    vmin=myvmin,
+    #                                    vmax=myvmax,
+    #                                    linewidth=0,
+    #                                    cmap=greys_map,
+    #                                    antialiased=True,
+    #                                    shade=True,
+    #                                    edgecolors='none',
+    #                                    color='none',
+    #                                    rcount=max(qf.nx,qf.ny),
+    #                                    ccount=max(qf.nx,qf.ny))
+    
+    #             cbar = fig.colorbar(surf, shrink=0.5, aspect=5)
+    #             cbar.set_label('Terrain elevation [m]', size=img_specs.axis_font["size"], fontname=img_specs.axis_font["fontname"])
+    #             cbar.ax.tick_params(labelsize=img_specs.colorbar_font["size"])
+    
+    #             pylab.xlabel('X [m]', **img_specs.axis_font)
+    #             pylab.ylabel('Y [m]', **img_specs.axis_font)
+    #             pylab.title('Time = %s s' % qf.time[i], **img_specs.title_font)
+    #             set_ticks_font(img_specs.axis_font, ax)
+    #             ax.set_xlim3d([0, qf.Lx])
+    #             ax.set_ylim3d([0, qf.Ly])
+    #             fname = '%s_Time_%d_s.png' % (savestr, qf.time[i])
+    #             fname = os.path.join(img_specs.save_dir, fname)
+    #             pylab.savefig(fname)
+    #             pylab.close()
+    #             del currval
+    #             del loc_var
+    #             if img_specs.gen_gif == 1:
+    #                 file_list.append(fname)
+    
+    #         if img_specs.gen_gif == 1:
+    #             fname_gif = '%s.gif' % savestr
+    #             fname_gif = os.path.join(img_specs.gif_dir, fname_gif)
+    #             make_gif(fname_gif, file_list)
 
 
 
@@ -780,6 +941,7 @@ def plot_terrain(df_classes: AllDrawFireClasses, color_map_jet=False):
 
 
 def plot_ignitions(df_classes: AllDrawFireClasses):
+    #Check that there is a fire to run
     if df_classes.flags.isfire == 1:
         qf = df_classes.qf  
         fuel_dens_idx = df_classes.fuel_idx

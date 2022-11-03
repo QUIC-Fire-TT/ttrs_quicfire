@@ -28,6 +28,15 @@ def open_file(filename: str, howto: str):
         input("PRESS ENTER TO CONTINUE.")
         sys.exit()
 
+def list_output_files(filestr: str, output_folder: str):
+    files = [f for f in os.listdir(output_folder) if filestr in f]
+    files_dict = {}
+    for f in files:
+        end = f.split('-')[-1]
+        sec = int(end.split('.')[0])
+        files_dict[sec]=f
+    return dict(sorted(files_dict.items()))
+
 def read_ground_fuel_height(qf: GridClass, output_folder: str):
     fid = open_file(os.path.join(output_folder, "groundfuelheight.bin"), "rb")
     # Read header
@@ -39,8 +48,49 @@ def read_ground_fuel_height(qf: GridClass, output_folder: str):
 
     return fuel_height
 
+def read_fireca_field_NEW(
+    fname: str,
+    qf: GridClass,
+    is_3d: int,
+    output_folder: str,
+):
 
-def read_fireca_field(
+    if "mburnt_integ-" in fname:
+        nvert = 1
+    elif "fire-energy_to_atmos-" in fname:
+        nvert = qf.nz_en2atmos
+    else:
+        if is_3d:
+            nvert = qf.nz + 1
+        else:
+            nvert = qf.nz
+
+    # Open file
+    fid = open_file(os.path.join(output_folder, fname), "rb")
+    outvar = np.zeros((qf.ny, qf.nx, nvert), dtype=np.float32)
+    # Read header
+    np.fromfile(fid, dtype=np.int32, count=1)
+    if is_3d == 0:
+        var = np.fromfile(fid, dtype=np.float32, count=qf.indexing.num_cells)
+        # http://scipy-cookbook.readthedocs.io/items/Indexing.html
+        index = tuple(
+            [
+                qf.indexing.ijk[::1, 1],
+                qf.indexing.ijk[::1, 0],
+                qf.indexing.ijk[::1, 2],
+            ]
+        )
+        outvar[index] = var
+    else:
+        for k in range(0, nvert):
+            t = np.fromfile(fid, dtype=np.float32, count=qf.nx * qf.ny)
+            outvar[::1, ::1, k] = np.reshape(t, (qf.ny, qf.nx))
+
+    fid.close()
+
+    return outvar
+
+def read_fireca_field_OLD(
     filestr: str,
     ntimes: int,
     times: list,
@@ -85,7 +135,6 @@ def read_fireca_field(
         fid.close()
 
     return outvar
-
 
 def read_vertical_grid(
     qu: GridClass, qf: GridClass, flags: FlagsClass, output_folder: str
