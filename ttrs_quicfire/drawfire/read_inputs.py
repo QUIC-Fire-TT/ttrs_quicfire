@@ -29,6 +29,22 @@ def open_file(filename: str, howto: str):
         sys.exit()
 
 def list_output_files(filestr: str, output_folder: str):
+    """
+    Builds a dict of all outputs with filestr prefix
+
+    Parameters
+    ----------
+    filestr : str
+        output prefix
+    output_folder : str
+        output folder path
+
+    Returns
+    -------
+    dict
+        All outputs with filestr prefix
+        dict[timestep]=file_name
+    """
     files = [f for f in os.listdir(output_folder) if filestr in f]
     files_dict = {}
     for f in files:

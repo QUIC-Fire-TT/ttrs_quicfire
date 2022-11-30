@@ -76,113 +76,126 @@ def plot_outputs(df_classes: AllDrawFireClasses):
         if flags.fuel_density == 1:
             #WORKING
             plot_fueldens(df_classes)
-            
+          
+    #         # OLD
+    # if flags.fuel_density == 1:
+    #     fuel_dens = read_fireca_field("fuels-dens-", qf.ntimes, qf.time, qf, 0, output_folder)
+    #     if qf.dx == 2:
+    #         all_planes = (1, 2, 5, 8, 10, 12)
+    #     else:
+    #         all_planes = list([1])
+    #     for iplane in all_planes:
+    #         if iplane <= qf.nz:
+    #             print("\t-fuel mass, plane: %d" % iplane)
+    #             plot_2d_field(False, qf, iplane, 'xy', fuel_dens, "Fuel density [kg/m^3]", "fuel_dens",
+    #                           [0., np.amax(fuel_dens[0][::1, ::1, iplane-1], axis=None)], img_specs,
+    #                           no_fuel_idx, flags)
 
-        plane = 1
-        # ------- Emissions
-        if flags.emissions == 2 or flags.emissions == 3:
-            print("\t-pm emissions")
-            emiss = read_fireca_field("pm_emissions-", qf.ntimes_ave, qf.time_ave, qf, 0, output_folder)
-            plot_2d_field(True, qf, plane, 'xy', emiss, "Soot (log10) [g]", "pm_emissions",
-                          [], img_specs, no_fuel_idx, flags)
-            del emiss
+        # plane = 1
+        # # ------- Emissions
+        # if flags.emissions == 2 or flags.emissions == 3:
+        #     print("\t-pm emissions")
+        #     emiss = read_fireca_field("pm_emissions-", qf.ntimes_ave, qf.time_ave, qf, 0, output_folder)
+        #     plot_2d_field(True, qf, plane, 'xy', emiss, "Soot (log10) [g]", "pm_emissions",
+        #                   [], img_specs, no_fuel_idx, flags)
+        #     del emiss
 
-        if flags.emissions == 1 or flags.emissions == 3:
-            print("\t-co emissions")
-            emiss = read_fireca_field("co_emissions-", qf.ntimes_ave, qf.time_ave, qf, 0, output_folder)
-            plot_2d_field(True, qf, plane, 'xy', emiss, "CO (log10) [g]", "co_emissions",
-                          [], img_specs, no_fuel_idx, flags)
-            del emiss
+        # if flags.emissions == 1 or flags.emissions == 3:
+        #     print("\t-co emissions")
+        #     emiss = read_fireca_field("co_emissions-", qf.ntimes_ave, qf.time_ave, qf, 0, output_folder)
+        #     plot_2d_field(True, qf, plane, 'xy', emiss, "CO (log10) [g]", "co_emissions",
+        #                   [], img_specs, no_fuel_idx, flags)
+        #     del emiss
 
-        # ------- Radiation
-        if flags.thermal_rad == 1:
-            print("\t-radiation")
-            conv = read_fireca_field("thermalradiation-", qf.ntimes_ave, qf.time_ave, qf, 0, output_folder)
-            plot_2d_field(True, qf, plane, 'xy', conv, "Convective heat to human [kW/m^2 skin]", "conv_heat",
-                          [], img_specs, no_fuel_idx, flags)
-            del conv
+        # # ------- Radiation
+        # if flags.thermal_rad == 1:
+        #     print("\t-radiation")
+        #     conv = read_fireca_field("thermalradiation-", qf.ntimes_ave, qf.time_ave, qf, 0, output_folder)
+        #     plot_2d_field(True, qf, plane, 'xy', conv, "Convective heat to human [kW/m^2 skin]", "conv_heat",
+        #                   [], img_specs, no_fuel_idx, flags)
+        #     del conv
 
-        # ------- Energy to atmosphere
-        if flags.en2atm == 1:
-            print("\t-energy to atmosphere")
-            en_to_atm = read_fireca_field("fire-energy_to_atmos-", qf.ntimes, qf.time, qf, 1, output_folder)
-            plot_2d_field(False, qf, plane, 'xy', en_to_atm, "Energy to atmosphere [kW/m^3]", "en_to_atm",
-                          [], img_specs, [], flags)
-            del en_to_atm
+        # # ------- Energy to atmosphere
+        # if flags.en2atm == 1:
+        #     print("\t-energy to atmosphere")
+        #     en_to_atm = read_fireca_field("fire-energy_to_atmos-", qf.ntimes, qf.time, qf, 1, output_folder)
+        #     plot_2d_field(False, qf, plane, 'xy', en_to_atm, "Energy to atmosphere [kW/m^3]", "en_to_atm",
+        #                   [], img_specs, [], flags)
+        #     del en_to_atm
 
-        # -------  Fireca winds
-        if flags.qf_winds == 1:
-            print("\t-fireca winds")
-            print("    * u")
-            windu_qf = read_fireca_field("windu", qf.ntimes, qf.time, qf, 1, output_folder)
-            plot_2d_field(False, qf, plane, 'xy', windu_qf, "U [m/s]", "u", [], img_specs, [], flags)
+        # # -------  Fireca winds
+        # if flags.qf_winds == 1:
+        #     print("\t-fireca winds")
+        #     print("    * u")
+        #     windu_qf = read_fireca_field("windu", qf.ntimes, qf.time, qf, 1, output_folder)
+        #     plot_2d_field(False, qf, plane, 'xy', windu_qf, "U [m/s]", "u", [], img_specs, [], flags)
 
-            print("    * v")
-            windv_qf = read_fireca_field("windv", qf.ntimes, qf.time, qf, 1, output_folder)
-            plot_2d_field(False, qf, plane, 'xy', windv_qf, "V [m/s]", "v", [], img_specs, [], flags)
-            del windv_qf
+        #     print("    * v")
+        #     windv_qf = read_fireca_field("windv", qf.ntimes, qf.time, qf, 1, output_folder)
+        #     plot_2d_field(False, qf, plane, 'xy', windv_qf, "V [m/s]", "v", [], img_specs, [], flags)
+        #     del windv_qf
 
-            print("    * w")
-            windw_qf = read_fireca_field("windw", qf.ntimes, qf.time, qf, 1, output_folder)
-            plot_2d_field(False, qf, plane, 'xy', windw_qf, "W [m/s]", "w", [], img_specs, [], flags)
+        #     print("    * w")
+        #     windw_qf = read_fireca_field("windw", qf.ntimes, qf.time, qf, 1, output_folder)
+        #     plot_2d_field(False, qf, plane, 'xy', windw_qf, "W [m/s]", "w", [], img_specs, [], flags)
 
-        # -------  QU winds (instantaneous)
-        if flags.qu_qwinds_inst == 1:
-            plane = 2
-            vertplane = math.floor(qu.Ly*0.5 / qu.dx)
-            print("\t-QU winds")
-            print("    * u")
-            windu_qu = read_fireca_field("qu_windu", qu.ntimes, qu.time, qu, 1, output_folder)
-            plot_2d_field(False, qu, plane, 'xy', windu_qu, "U_inst [m/s]", "u_qu", [], img_specs, [], flags)
-            plot_2dvert_field(False, qu, vertplane, 'xz', windu_qu, "U_inst [m/s]",
-                              "u_qu_vert", [], img_specs, [], flags)
+        # # -------  QU winds (instantaneous)
+        # if flags.qu_qwinds_inst == 1:
+        #     plane = 2
+        #     vertplane = math.floor(qu.Ly*0.5 / qu.dx)
+        #     print("\t-QU winds")
+        #     print("    * u")
+        #     windu_qu = read_fireca_field("qu_windu", qu.ntimes, qu.time, qu, 1, output_folder)
+        #     plot_2d_field(False, qu, plane, 'xy', windu_qu, "U_inst [m/s]", "u_qu", [], img_specs, [], flags)
+        #     plot_2dvert_field(False, qu, vertplane, 'xz', windu_qu, "U_inst [m/s]",
+        #                       "u_qu_vert", [], img_specs, [], flags)
 
-            print("    * v")
-            windv_qu = read_fireca_field("qu_windv", qu.ntimes, qu.time, qu, 1, output_folder)
-            plot_2d_field(False, qu, plane, 'xy', windv_qu, "V_inst [vm/s]", "v_qu", [], img_specs, [], flags)
-            plot_2dvert_field(False, qu, vertplane, 'xz', windv_qu, "V_inst [vm/s]", "v_qu_vert", [], img_specs, [], flags)
-            del windv_qu
+        #     print("    * v")
+        #     windv_qu = read_fireca_field("qu_windv", qu.ntimes, qu.time, qu, 1, output_folder)
+        #     plot_2d_field(False, qu, plane, 'xy', windv_qu, "V_inst [vm/s]", "v_qu", [], img_specs, [], flags)
+        #     plot_2dvert_field(False, qu, vertplane, 'xz', windv_qu, "V_inst [vm/s]", "v_qu_vert", [], img_specs, [], flags)
+        #     del windv_qu
 
-            print("    * w")
-            windw_qu = read_fireca_field("qu_windw", qu.ntimes, qu.time, qu, 1, output_folder)
-            plot_2d_field(False, qu, plane, 'xy', windw_qu, "W_inst [m/s]", "w_qu", [], img_specs, [], flags)
-            plot_2dvert_field(False, qu, vertplane, 'xz', windw_qu, "W_inst [m/s]", "w_qu_vert", [], img_specs, [], flags)
+        #     print("    * w")
+        #     windw_qu = read_fireca_field("qu_windw", qu.ntimes, qu.time, qu, 1, output_folder)
+        #     plot_2d_field(False, qu, plane, 'xy', windw_qu, "W_inst [m/s]", "w_qu", [], img_specs, [], flags)
+        #     plot_2dvert_field(False, qu, vertplane, 'xz', windw_qu, "W_inst [m/s]", "w_qu_vert", [], img_specs, [], flags)
 
-        # -------  QU winds (average)
-        if flags.qu_qwinds_ave == 1:
-            plane = 2
-            print("\t-QU winds ave")
-            print("    * u")
-            windu_qu = read_fireca_field("qu_windu_ave", qu.ntimes_ave, qu.time_ave, qu, 1, output_folder)
-            plot_2d_field(True, qu, plane, 'xy', windu_qu, "U_ave [m/s]", "u_qu", [], img_specs, [], flags)
+        # # -------  QU winds (average)
+        # if flags.qu_qwinds_ave == 1:
+        #     plane = 2
+        #     print("\t-QU winds ave")
+        #     print("    * u")
+        #     windu_qu = read_fireca_field("qu_windu_ave", qu.ntimes_ave, qu.time_ave, qu, 1, output_folder)
+        #     plot_2d_field(True, qu, plane, 'xy', windu_qu, "U_ave [m/s]", "u_qu", [], img_specs, [], flags)
 
-            print("    * v")
-            windv_qu = read_fireca_field("qu_windv_ave", qu.ntimes_ave, qu.time_ave, qu, 1, output_folder)
-            plot_2d_field(True, qu, plane, 'xy', windv_qu, "V_ave [m/s]", "v_qu", [], img_specs, [], flags)
-            del windv_qu
+        #     print("    * v")
+        #     windv_qu = read_fireca_field("qu_windv_ave", qu.ntimes_ave, qu.time_ave, qu, 1, output_folder)
+        #     plot_2d_field(True, qu, plane, 'xy', windv_qu, "V_ave [m/s]", "v_qu", [], img_specs, [], flags)
+        #     del windv_qu
 
-            print("    * w")
-            windw_qu = read_fireca_field("qu_windw_ave", qu.ntimes_ave, qu.time_ave, qu, 1, output_folder)
-            plot_2d_field(True, qu, plane, 'xy', windw_qu, "W_ave [m/s]", "w_qu", [], img_specs, [], flags)
+        #     print("    * w")
+        #     windw_qu = read_fireca_field("qu_windw_ave", qu.ntimes_ave, qu.time_ave, qu, 1, output_folder)
+        #     plot_2d_field(True, qu, plane, 'xy', windw_qu, "W_ave [m/s]", "w_qu", [], img_specs, [], flags)
 
-        # ------- Reaction rate
-        plane = 1
-        if flags.react_rate == 1:
-            print("\t-reaction rate")
-            react_rate = read_fireca_field("fire-reaction_rate-", qf.ntimes, qf.time, qf, 0, output_folder)
-            plot_2d_field(False, qf, plane, 'xy', react_rate,
-                          "Reaction rate [kg/m3/s]", "react_rate", [], img_specs, no_fuel_idx, flags)
-            del react_rate
+        # # ------- Reaction rate
+        # plane = 1
+        # if flags.react_rate == 1:
+        #     print("\t-reaction rate")
+        #     react_rate = read_fireca_field("fire-reaction_rate-", qf.ntimes, qf.time, qf, 0, output_folder)
+        #     plot_2d_field(False, qf, plane, 'xy', react_rate,
+        #                   "Reaction rate [kg/m3/s]", "react_rate", [], img_specs, no_fuel_idx, flags)
+        #     del react_rate
 
-        # ------- Fuel moisture
-        if flags.moisture == 1:
-            fuels_moist = read_fireca_field("fuels-moist-", qf.ntimes, qf.time, qf, 0, output_folder)
-            for iplane in (1, 2, 5, 8, 10, 12):
-                if iplane <= qf.nz:
-                    print("\t-moisture, plane: %d" % iplane)
-                    plot_2d_field(False, qf, iplane, 'xy', fuels_moist,
-                                  "Fuel moisture [-]", "fuels_moist", [], img_specs, no_fuel_idx, flags)
-            del fuels_moist
+        # # ------- Fuel moisture
+        # if flags.moisture == 1:
+        #     fuels_moist = read_fireca_field("fuels-moist-", qf.ntimes, qf.time, qf, 0, output_folder)
+        #     for iplane in (1, 2, 5, 8, 10, 12):
+        #         if iplane <= qf.nz:
+        #             print("\t-moisture, plane: %d" % iplane)
+        #             plot_2d_field(False, qf, iplane, 'xy', fuels_moist,
+        #                           "Fuel moisture [-]", "fuels_moist", [], img_specs, no_fuel_idx, flags)
+        #     del fuels_moist
     # else:
     #     plot_QU_winds
 
