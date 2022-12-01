@@ -529,12 +529,29 @@ def plot_pm_emissions(df_classes, MEMORY_EFFICIENT=False, all_planes = [1]):
     is_3d = 0
     savestr = "pm_emissions-"
     
-    if flags.emissions == 1:
-        #Read in output files
-        file_names = list_output_files(savestr, output_folder)
+    #Read in output files
+    file_names = list_output_files(savestr, output_folder)
+    if file_names: #continue if dict not empty
         print("\t-pm emissions")
         plot_2d_field(qf, all_planes, 'xy', file_names, "Soot (log10) [g]", savestr,
                       False, img_specs, no_fuel_idx, flags, output_folder, is_3d, MEMORY_EFFICIENT)
+
+def plot_co_emissions(df_classes, MEMORY_EFFICIENT=False, all_planes = [1]):
+    qf = df_classes.qf
+    no_fuel_idx = df_classes.no_fuel_idx
+    img_specs = df_classes.img_specs
+    flags = df_classes.flags
+    output_folder = df_classes.output_folder
+    is_3d = 0
+    savestr = "co_emissions-"
+    
+    #Read in output files
+    file_names = list_output_files(savestr, output_folder)
+    if file_names: #continue if dict not empty
+        print("\t-co emissions")
+        plot_2d_field(qf, all_planes, 'xy', file_names, "CO (log10) [g]", savestr,
+                      False, img_specs, no_fuel_idx, flags, output_folder, is_3d, MEMORY_EFFICIENT)
+        
         
 def plot_2d_field(q: GridClass, planes: list, plane_dir: str, file_names: dict, ystr: str,
                   savestr: str, cblim: bool, img_specs: ImgClass, no_fuel_idx, flags: FlagsClass, output_folder:str,

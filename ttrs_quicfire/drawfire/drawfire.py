@@ -77,14 +77,8 @@ def plot_outputs(df_classes: AllDrawFireClasses, MEMORY_EFFICIENT=False):
         plane = 1
         # ------- Emissions
         if flags.emissions == 1:
-            plot_pm_emissions(df_classes, MEMORY_EFFICIENT)
-
-        if flags.emissions == 1:
-            print("\t-co emissions")
-            emiss = read_fireca_field("co_emissions-", qf.ntimes_ave, qf.time_ave, qf, 0, output_folder)
-            plot_2d_field(True, qf, plane, 'xy', emiss, "CO (log10) [g]", "co_emissions",
-                          [], img_specs, no_fuel_idx, flags)
-            del emiss
+            plot_pm_emissions(df_classes, MEMORY_EFFICIENT)            
+            plot_co_emissions(df_classes, MEMORY_EFFICIENT)
 
         # # ------- Radiation
         # if flags.thermal_rad == 1:
