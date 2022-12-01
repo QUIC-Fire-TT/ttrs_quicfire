@@ -64,7 +64,7 @@ def read_ground_fuel_height(qf: GridClass, output_folder: str):
 
     return fuel_height
 
-def read_fireca_field_NEW(
+def read_ONE_fireca_field(
     fname: str,
     qf: GridClass,
     is_3d: int,
@@ -106,7 +106,7 @@ def read_fireca_field_NEW(
 
     return outvar
 
-def read_fireca_field_OLD(
+def read_ALL_fireca_field(
     filestr: str,
     ntimes: int,
     times: list,

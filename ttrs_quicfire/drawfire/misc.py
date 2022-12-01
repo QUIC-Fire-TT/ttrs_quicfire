@@ -24,6 +24,9 @@ def create_plots_folder(gen_gif, img_specs: ImgClass, prj_folder: str):
     else:
         img_specs.gif_dir = []
 
+#
+#ZCC's changes doesn't use this function anymore
+#
 def get_times(is_ave_time: bool, q: GridClass):
     if is_ave_time is True:
         ntimes = q.ntimes_ave

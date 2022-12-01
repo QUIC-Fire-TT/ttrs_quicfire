@@ -231,7 +231,7 @@ def plot_percmassburnt(df_classes: AllDrawFireClasses):
     #plotvar = read_fireca_field("mburnt_integ-", qf.ntimes, qf.time, qf, 1, output_folder)
     
     #Read in output files
-    files_names = list_output_files("mburnt_integ-", output_folder)
+    file_names = list_output_files("mburnt_integ-", output_folder)
     
     if flags.isfire == 1 and flags.perc_mass_burnt == 1:
         ncol = 64
@@ -250,10 +250,10 @@ def plot_percmassburnt(df_classes: AllDrawFireClasses):
         for icolor_scheme in range(0, 2):
             file_list = []
     
-            for i,k in enumerate(files_names.keys()):
+            for i,k in enumerate(file_names.keys()):
                 print("     * time %d/%d" % (i + 1, qf.ntimes))
                 
-                plotvar = read_fireca_field_NEW(files_names[k], qf, 1, output_folder)
+                plotvar = read_ONE_fireca_field(file_names[k], qf, 1, output_folder)
                 currval = get_mass_burnt(no_fuel_idx, icolor_scheme, currval0, plotvar.squeeze())
     
                 fig = pylab.figure(figsize=(img_specs.figure_size[0], img_specs.figure_size[1]))
@@ -381,11 +381,12 @@ def make_gif(fname_gif: str, file_list: list):
             writer.append_data(imageio.imread(f))
 
 
-def get_minmax(ntimes: int, plane: int, plane_dir: str, cblim, plotvar: list, no_fuel_idx, ncol_cmap: int):
-    if not cblim:
-        myvmin = 1e8
-        myvmax = -1e8
-        for i in range(0, ntimes):
+def get_minmax(times: list, plane: int, plane_dir: str, cblim, 
+               plotvar: list or dict, no_fuel_idx, ncol_cmap: int,
+               q: GridClass, output_folder: str, is_3d:int):
+    def return_currval(plane: int, plane_dir: str, cblim, plotvar: list or dict,
+                        is_3d:int, t:int=0, i:int=0):
+        if type(plotvar) == list:
             if plane >= 0:
                 if plane_dir == 'xy':
                     currval = plotvar[i][::1, ::1, plane - 1]
@@ -396,15 +397,36 @@ def get_minmax(ntimes: int, plane: int, plane_dir: str, cblim, plotvar: list, no
                     sys.exit(1)
             else:
                 currval = plotvar[i]
-
+        else: #is file_list_dict
+            file_names = plotvar
+            temp_plotvar = read_ONE_fireca_field(file_names[t], q, is_3d, output_folder)
+            if plane >= 0:
+                if plane_dir == 'xy':
+                    currval = temp_plotvar[::1, ::1, plane - 1]
+                elif plane_dir == 'xz':
+                    currval = temp_plotvar[plane - 1, ::1, ::1]
+                else:
+                    print('Invalid plane %s\n' % plane_dir)
+                    sys.exit(1)
+            else:
+                currval = temp_plotvar
+        
+        return currval
+            
+    if not cblim:
+        myvmin = 1e8
+        myvmax = -1e8
+        for i,t in enumerate(times):
+            currval = return_currval(plane, plane_dir, cblim, plotvar, is_3d, t, i)        
             myvmin = min(myvmin, np.min(currval))
             myvmax = max(myvmax, np.max(currval))
 
         check_equal_cbar_limits(myvmin, myvmax)
 
     else:
-        myvmin = cblim[0]
-        myvmax = cblim[1]
+        currval = return_currval(plane, plane_dir, cblim, plotvar, is_3d)        
+        myvmin = 0
+        myvmax = np.max(currval)
 
     if no_fuel_idx:
         dcol = (myvmax - myvmin) / float(ncol_cmap - 1)
@@ -476,77 +498,106 @@ def get_colormap(ncol_cmap: int, no_fuel_idx):
 
     return my_cmap
 
-def plot_fueldens(df_classes, all_planes=None):
+def plot_fueldens(df_classes, MEMORY_EFFICIENT=False, all_planes:list=[]):
     qf = df_classes.qf
     no_fuel_idx = df_classes.no_fuel_idx
     img_specs = df_classes.img_specs
     flags = df_classes.flags
     output_folder = df_classes.output_folder
+    is_3d = 0
+    savestr = "fuels-dens-"
     
-    #Read in output files
-    files_names = list_output_files("fuels-dens-", output_folder)
+    if flags.fuel_density == 1:
+        #Read in output files
+        file_names = list_output_files(savestr, output_folder)
+        
+        if not all_planes:
+            if qf.dx == 2:
+                all_planes = [1, 2, 5, 8, 10, 12]
+            else:
+                all_planes = [1]
     
-    if all_planes is None:
-        if qf.dx == 2:
-            all_planes = (1, 2, 5, 8, 10, 12)
-        else:
-            all_planes = list([1])
-    for iplane in all_planes:
-        if iplane <= qf.nz:
-            print("\t-fuel mass, plane: %d" % iplane)
-            
-            plot_2d_field(False, qf, iplane, 'xy', files_names, "Fuel density [kg/m^3]", "fuel_dens",
-                          [0., np.amax(fuel_dens[::1, ::1, iplane-1], axis=None)], img_specs,
-                          no_fuel_idx, flags)
-    
-def plot_2d_field(is_ave_time: bool, q: GridClass, plane: int, plane_dir: str, files_names: dict, ystr: str,
-                  savestr: str, cblim, img_specs: ImgClass, no_fuel_idx, flags: FlagsClass):
+        plot_2d_field(qf, all_planes, 'xy', file_names, "Fuel density [kg/m^3]", savestr,
+                      True, img_specs, no_fuel_idx, flags, output_folder, is_3d, MEMORY_EFFICIENT)
 
+def plot_pm_emissions(df_classes, MEMORY_EFFICIENT=False, all_planes = [1]):
+    qf = df_classes.qf
+    no_fuel_idx = df_classes.no_fuel_idx
+    img_specs = df_classes.img_specs
+    flags = df_classes.flags
+    output_folder = df_classes.output_folder
+    is_3d = 0
+    savestr = "pm_emissions-"
+    
+    if flags.emissions == 1:
+        #Read in output files
+        file_names = list_output_files(savestr, output_folder)
+        print("\t-pm emissions")
+        plot_2d_field(qf, all_planes, 'xy', file_names, "Soot (log10) [g]", savestr,
+                      False, img_specs, no_fuel_idx, flags, output_folder, is_3d, MEMORY_EFFICIENT)
+        
+def plot_2d_field(q: GridClass, planes: list, plane_dir: str, file_names: dict, ystr: str,
+                  savestr: str, cblim: bool, img_specs: ImgClass, no_fuel_idx, flags: FlagsClass, output_folder:str,
+                  is_3d, MEMORY_EFFICIENT:bool=False):
     ncol_cmap = 65
-    ntimes, times = get_times(is_ave_time, q)
-    ###WORKING
-    #Should I iterate through all files_names to get myvmin and myvmax?
-    myvmin, myvmax = get_minmax(ntimes, plane, plane_dir, cblim, plotvar, no_fuel_idx, ncol_cmap)
+    times = list(file_names.keys())
+    ntimes = len(times)
     my_cmap = get_colormap(ncol_cmap, no_fuel_idx)
-
-    plane_str = get_plane_str(plane, plane_dir)
-    file_list = []
-    
-    for i,k in enumerate(files_names.keys()):               
-        fuel_dens = read_fireca_field_NEW(files_names[k], qf, 1, output_folder)
-    for i in range(0, ntimes):
-        print("     * time %d/%d" % (i + 1, ntimes))
-
-        [_, _, currval] = get_var2plot(q, plotvar[i], plane, plane_dir, no_fuel_idx, myvmin, flags)
-
-        fig = pylab.figure(figsize=(img_specs.figure_size[0], img_specs.figure_size[1]))
-        ax = fig.add_subplot(111)
-
-        pylab.imshow(currval,
-                     cmap=my_cmap,
-                     interpolation='none',
-                     origin='lower',
-                     extent=q.horizontal_extent,
-                     vmin=myvmin,
-                     vmax=myvmax)
-        cbar = pylab.colorbar()
-        cbar.set_label(ystr, size=img_specs.axis_font["size"], fontname=img_specs.axis_font["fontname"])
-        cbar.ax.tick_params(labelsize=img_specs.colorbar_font["size"])
-        pylab.xlabel('X [m]', **img_specs.axis_font)
-        pylab.ylabel('Y [m]', **img_specs.axis_font)
-        pylab.title('Time = %s s' % times[i], **img_specs.title_font)
-        set_ticks_font(img_specs.axis_font, ax)
-        fname = '%s_Time_%d_s%s.png' % (savestr, times[i], plane_str)
-        fname = os.path.join(img_specs.save_dir, fname)
-        pylab.savefig(fname)
-        pylab.close()
-        if img_specs.gen_gif == 1:
-            file_list.append(fname)
-
-    if img_specs.gen_gif == 1:
-        fname_gif = '%s%s.gif' % (savestr, plane_str)
-        fname_gif = os.path.join(img_specs.gif_dir, fname_gif)
-        make_gif(fname_gif, file_list)
+    if MEMORY_EFFICIENT:
+        plotvar = file_names
+    else:        
+        plotvar = read_ALL_fireca_field(savestr, ntimes, times, q, is_3d, output_folder)
+        
+    for plane in planes:
+        #Check that plane is in range
+        in_range = True
+        if plane_dir=='xy' and plane > q.nz:
+            in_range = False
+        elif plane_dir=='xz' and plane > q.ny:
+            in_range = False
+        if in_range:
+            myvmin, myvmax = get_minmax(times, plane, plane_dir, cblim, plotvar, 
+                                        no_fuel_idx, ncol_cmap, q, output_folder,
+                                        is_3d) 
+            plane_str = get_plane_str(plane, plane_dir)
+            file_list = []
+            
+            for i,t in enumerate(times):
+                print("     * time %d/%d" % (i + 1, ntimes))
+                if type(plotvar) == list: #arrays already loaded                     
+                    [_, _, currval] = get_var2plot(q, plotvar[i], plane, plane_dir, no_fuel_idx, myvmin, flags)
+                else:
+                    temp_plotvar = read_ONE_fireca_field(file_names[t], q, is_3d, output_folder)
+                    [_, _, currval] = get_var2plot(q, temp_plotvar, plane, plane_dir, no_fuel_idx, myvmin, flags)
+        
+                fig = pylab.figure(figsize=(img_specs.figure_size[0], img_specs.figure_size[1]))
+                ax = fig.add_subplot(111)
+        
+                pylab.imshow(currval,
+                             cmap=my_cmap,
+                             interpolation='none',
+                             origin='lower',
+                             extent=q.horizontal_extent,
+                             vmin=myvmin,
+                             vmax=myvmax)
+                cbar = pylab.colorbar()
+                cbar.set_label(ystr, size=img_specs.axis_font["size"], fontname=img_specs.axis_font["fontname"])
+                cbar.ax.tick_params(labelsize=img_specs.colorbar_font["size"])
+                pylab.xlabel('X [m]', **img_specs.axis_font)
+                pylab.ylabel('Y [m]', **img_specs.axis_font)
+                pylab.title('Time = %s s' % times[i], **img_specs.title_font)
+                set_ticks_font(img_specs.axis_font, ax)
+                fname = '%s_Time_%d_s%s.png' % (savestr, times[i], plane_str)
+                fname = os.path.join(img_specs.save_dir, fname)
+                pylab.savefig(fname)
+                pylab.close()
+                if img_specs.gen_gif == 1:
+                    file_list.append(fname)
+        
+            if img_specs.gen_gif == 1:
+                fname_gif = '%s%s.gif' % (savestr, plane_str)
+                fname_gif = os.path.join(img_specs.gif_dir, fname_gif)
+                make_gif(fname_gif, file_list)
 
 
 def plot_2dvert_field(is_ave_time: bool, q: GridClass, plane: int, plane_dir: str, plotvar: list, ystr: str,

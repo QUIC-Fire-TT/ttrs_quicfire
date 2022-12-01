@@ -12,4 +12,3 @@ __credits__="Tall Timbers"
 
 from ttrs_quicfire.drawfire import drawfire
 from ttrs_quicfire.buildfire import buildfire
-

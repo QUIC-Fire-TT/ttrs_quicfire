@@ -38,7 +38,7 @@ def compress_fuel_dens(qf: GridClass, flags: FlagsClass, output_folder: str):
         temp_ntimes = 1
         temp_time = [qf.time[0]]
 
-    fuel_dens = read_fireca_field_NEW("fuels-dens-00000.bin", qf, 0, output_folder)
+    fuel_dens = read_ONE_fireca_field("fuels-dens-00000.bin", qf, 0, output_folder)
 
     fuel_dens_compressed = np.sum(fuel_dens, axis=2)
     fuel_idx = np.where(fuel_dens_compressed > 0)
@@ -47,7 +47,7 @@ def compress_fuel_dens(qf: GridClass, flags: FlagsClass, output_folder: str):
     return fuel_idx, no_fuel_idx
 
 
-def plot_outputs(df_classes: AllDrawFireClasses):
+def plot_outputs(df_classes: AllDrawFireClasses, MEMORY_EFFICIENT=False):
     #unpack df_classes
     qu, qf, ignitions, flags, fb, prj_folder, output_folder, gen_vtk, gen_gif, 
     img_specs, fuel_idx, no_fuel_idx = df_classes.class_list  
@@ -56,9 +56,6 @@ def plot_outputs(df_classes: AllDrawFireClasses):
     plot_terrain(df_classes)
 
     if flags.isfire == 1:
-        # print("\t-fuel density field")
-        # fuel_idx, no_fuel_idx = compress_fuel_dens(qf, flags, output_folder)
-
         # ------- Firetech ignitions
         print("\t-initial ignitions")
         plot_ignitions(df_classes)
@@ -74,38 +71,20 @@ def plot_outputs(df_classes: AllDrawFireClasses):
 
         # ------- Fuel mass
         if flags.fuel_density == 1:
-            #WORKING
-            plot_fueldens(df_classes)
+            plot_fueldens(df_classes, MEMORY_EFFICIENT)
           
-    #         # OLD
-    # if flags.fuel_density == 1:
-    #     fuel_dens = read_fireca_field("fuels-dens-", qf.ntimes, qf.time, qf, 0, output_folder)
-    #     if qf.dx == 2:
-    #         all_planes = (1, 2, 5, 8, 10, 12)
-    #     else:
-    #         all_planes = list([1])
-    #     for iplane in all_planes:
-    #         if iplane <= qf.nz:
-    #             print("\t-fuel mass, plane: %d" % iplane)
-    #             plot_2d_field(False, qf, iplane, 'xy', fuel_dens, "Fuel density [kg/m^3]", "fuel_dens",
-    #                           [0., np.amax(fuel_dens[0][::1, ::1, iplane-1], axis=None)], img_specs,
-    #                           no_fuel_idx, flags)
 
-        # plane = 1
-        # # ------- Emissions
-        # if flags.emissions == 2 or flags.emissions == 3:
-        #     print("\t-pm emissions")
-        #     emiss = read_fireca_field("pm_emissions-", qf.ntimes_ave, qf.time_ave, qf, 0, output_folder)
-        #     plot_2d_field(True, qf, plane, 'xy', emiss, "Soot (log10) [g]", "pm_emissions",
-        #                   [], img_specs, no_fuel_idx, flags)
-        #     del emiss
+        plane = 1
+        # ------- Emissions
+        if flags.emissions == 1:
+            plot_pm_emissions(df_classes, MEMORY_EFFICIENT)
 
-        # if flags.emissions == 1 or flags.emissions == 3:
-        #     print("\t-co emissions")
-        #     emiss = read_fireca_field("co_emissions-", qf.ntimes_ave, qf.time_ave, qf, 0, output_folder)
-        #     plot_2d_field(True, qf, plane, 'xy', emiss, "CO (log10) [g]", "co_emissions",
-        #                   [], img_specs, no_fuel_idx, flags)
-        #     del emiss
+        if flags.emissions == 1:
+            print("\t-co emissions")
+            emiss = read_fireca_field("co_emissions-", qf.ntimes_ave, qf.time_ave, qf, 0, output_folder)
+            plot_2d_field(True, qf, plane, 'xy', emiss, "CO (log10) [g]", "co_emissions",
+                          [], img_specs, no_fuel_idx, flags)
+            del emiss
 
         # # ------- Radiation
         # if flags.thermal_rad == 1:
