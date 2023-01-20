@@ -118,6 +118,7 @@ def generate_jet_colorbar(m: int):
 
 
 def plot_fuelheight(df_classes: AllDrawFireClasses):
+    print("\t-ground level fuel height")
     qf = df_classes.qf
     img_specs = df_classes.img_specs
     output_folder = df_classes.output_folder
@@ -234,6 +235,7 @@ def plot_percmassburnt(df_classes: AllDrawFireClasses):
     file_names = list_output_files("mburnt_integ-", output_folder)
     
     if flags.isfire == 1 and flags.perc_mass_burnt == 1:
+        print("\t-% mass burnt")
         ncol = 64
     
         # Nan where there is no fuel
@@ -894,6 +896,7 @@ def plot_terrain(df_classes: AllDrawFireClasses, color_map_jet=False):
 def plot_ignitions(df_classes: AllDrawFireClasses):
     #Check that there is a fire to run
     if df_classes.flags.isfire == 1:
+        print("\t-initial ignitions")
         qf = df_classes.qf  
         fuel_dens_idx = df_classes.fuel_idx
         ignitions = df_classes.ignitions.hor_plane

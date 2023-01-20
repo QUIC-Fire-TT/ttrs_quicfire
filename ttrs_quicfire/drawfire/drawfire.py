@@ -56,37 +56,32 @@ def plot_outputs(df_classes: AllDrawFireClasses, MEMORY_EFFICIENT=False):
     plot_terrain(df_classes)
 
     if flags.isfire == 1:
-        # ------- Firetech ignitions
-        print("\t-initial ignitions")
+        # ------- Firetech ignitions      
         plot_ignitions(df_classes)
 
         # ------- fuel height (ground level only)
-        print("\t-ground level fuel height")
         plot_fuelheight(df_classes)
 
         # ------- mass burnt (vertically-integrated)
-        if flags.perc_mass_burnt == 1:
-            print("\t-% mass burnt")
+        if flags.perc_mass_burnt == 1:            
             plot_percmassburnt(df_classes)
 
         # ------- Fuel mass
         if flags.fuel_density == 1:
             plot_fueldens(df_classes, MEMORY_EFFICIENT)
           
-
-        plane = 1
         # ------- Emissions
         if flags.emissions == 1:
             plot_pm_emissions(df_classes, MEMORY_EFFICIENT)            
             plot_co_emissions(df_classes, MEMORY_EFFICIENT)
 
-        # # ------- Radiation
-        # if flags.thermal_rad == 1:
-        #     print("\t-radiation")
-        #     conv = read_fireca_field("thermalradiation-", qf.ntimes_ave, qf.time_ave, qf, 0, output_folder)
-        #     plot_2d_field(True, qf, plane, 'xy', conv, "Convective heat to human [kW/m^2 skin]", "conv_heat",
-        #                   [], img_specs, no_fuel_idx, flags)
-        #     del conv
+        # ------- Radiation
+        if flags.thermal_rad == 1:
+            print("\t-radiation")
+            conv = read_fireca_field("thermalradiation-", qf.ntimes_ave, qf.time_ave, qf, 0, output_folder)
+            plot_2d_field(True, qf, plane, 'xy', conv, "Convective heat to human [kW/m^2 skin]", "conv_heat",
+                          [], img_specs, no_fuel_idx, flags)
+            del conv
 
         # # ------- Energy to atmosphere
         # if flags.en2atm == 1:
