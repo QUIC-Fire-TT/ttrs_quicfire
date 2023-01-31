@@ -189,7 +189,7 @@ def fastfuels_access(x_center,y_center,x_ext,y_ext,out_dir):
     del roi
     
 def build_ff_domain(dom, out_dir, FF_request, use_topo):
-    import ttrs_quicfire.quic_fire as qf
+    import ttrs_quicfire.buildfire as bf
     x_center,y_center,x_ext,y_ext = [dom.x_center, dom.y_center, dom.X_length, dom.Y_length] 
     # if out_dir=='default':
     #     #main_loc should contain file path of main.py script calling this one
@@ -201,7 +201,7 @@ def build_ff_domain(dom, out_dir, FF_request, use_topo):
     if FF_request:
         fastfuels_access(x_center,y_center,x_ext,y_ext,out_dir)
         
-    return qf.QF_Fuel_Arrays(dom, out_dir, use_topo)
+    return bf.QF_Fuel_Arrays(dom, out_dir, use_topo)
 
 if __name__=="__main__":
     main()

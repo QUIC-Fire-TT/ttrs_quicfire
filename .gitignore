@@ -11,6 +11,7 @@ __pycache__/
 
 #Folders
 00_Ignore/
+#ttrs_quicfire/drawfire*
 EXAMPLE_SETUP/FF_Fuel/
 EXAMPLE_SETUP/FilesToCopy/quicfire_311
 EXAMPLE_SETUP/Run/
