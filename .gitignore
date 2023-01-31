@@ -1,0 +1,28 @@
+# Distribution Files
+build/
+dist/
+*.egg-info/
+
+# Python Files
+__pycache__/
+
+# MacOS Specific
+.DS_Store
+
+#Folders
+00_Ignore/
+EXAMPLE_SETUP/FF_Fuel/
+EXAMPLE_SETUP/FilesToCopy/quicfire_311
+EXAMPLE_SETUP/Run/
+EXAMPLE_SETUP/Run_old/
+EXAMPLE_SETUP/Shapefiles/bbox*
+EXAMPLE_SETUP/Shapefiles/build_black*
+EXAMPLE_SETUP/Shapefiles/ig_lines*
+EXAMPLE_SETUP/main_testSensor.py
+EXAMPLE_SETUP/temp.txt
+EglinBurn/
+FF_Fuel/
+FilesToCopy/
+Run/
+Shapefiles/
+fastfuels.yml.save
