@@ -22,19 +22,19 @@ Created on Wed Mar 23 09:11:26 2022
 import os
 import sys
 import numpy as np
-import ttrs_quicfire as qf
+import ttrs_quicfire.buildfire as bf
 
 OG_PATH = os.getcwd()
 
 ###Building and Tracking Shapefiles
 #Track path to shapefiles that exist:
-shape_paths = qf.Shapefile_Paths()
+shape_paths = bf.Shapefile_Paths()
 
 ###Build domain class from shape
-dom = qf.dom_from_burn_plot(shape_paths, buffer=30, QF_PATH= os.path.join(OG_PATH, 'Run'))
+dom = bf.dom_from_burn_plot(shape_paths, buffer=30, QF_PATH= os.path.join(OG_PATH, 'Run'))
 
 ###Build FF Fuel domain
-qf_arrs = qf.build_ff_domain(dom, FF_request=True)
+qf_arrs = bf.build_ff_domain(dom, FF_request=False)
 #Fuel breaks
 qf_arrs.build_fuelbreak() #default build 6m fuel break around the plot
 qf_arrs.build_fuelbreak(shape_paths.streams, buffer = 1)
@@ -59,7 +59,7 @@ qf_arrs.custom_windfield(speeds=speeds, dirs=directions, times=times)
 #qf_arrs.calc_normal_windfield(start_speed = avg_wind_speed, start_dir = avg_wind_dir)
 
 #Build Ignition
-qf.atv_ignition(dom, wind_dir=avg_wind_dir, line_space_chain = 2)
+bf.atv_ignition(dom, wind_dir=avg_wind_dir, line_space_chain = 2)
 
 #Build QF simulation
-qf.build_qf_run(qf_arrs)
+bf.build_qf_run(qf_arrs)

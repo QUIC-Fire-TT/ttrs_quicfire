@@ -8,11 +8,12 @@ setup(
     description='ttrs_quicfire is a Python library to easily configure burn models for plots of land defined using shape files for the quicfire model.',
     long_description=info,
     long_description_content_type='text/markdown',
-    url='https://github.com/QUIC-Fire-TT/ttrs_quicfire',
+    #url='https://github.com/QUIC-Fire-TT/ttrs_quicfire',
     license='MIT', # Verify License Before Upload
     author='Zachary Cope',
     author_email='zcope@talltimbers.org',
-    packages=find_packages(),
+    #packages=find_packages(),
+    packages=['ttrs_quicfire'],
     install_requires=['numpy',
                       'scipy',
                       'geopandas',
@@ -29,7 +30,7 @@ setup(
     ],
     project_urls={
         #'Documentation': 'https://github.com/QUIC-Fire-TT/ttrs_quicfire/wiki', # Github Wiki?
-        'Source': 'https://github.com/QUIC-Fire-TT/ttrs_quicfire', # Github Repo
+        #'Source': 'https://github.com/QUIC-Fire-TT/ttrs_quicfire', # Github Repo
         'Tracker': 'https://github.com/QUIC-Fire-TT/ttrs_quicfireissues', # Github Issues
     }
 )
