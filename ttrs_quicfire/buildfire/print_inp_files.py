@@ -32,7 +32,7 @@ def main(qf_arrs, manual_dz):
     print_Runtime_Advanced_User_Inputs_inp()
     for k in ws_keys:
         print_sensor_inp(wind_sensors[k])
-    print_topo_inp(flat=not qf_arrs.use_topo)
+    print_QU_TopoInputs_inp(flat=not qf_arrs.use_topo)
     
     src = dom.ToCopy
     dst = QF_PATH
@@ -274,7 +274,7 @@ def print_QU_TopoInputs_inp(flat):
         topo_fname = '""'
     else:
         topo_flag = 11
-        topo_fname = "topo.dat"
+        topo_fname = "ftelevation.dat"
     with open(os.path.join(QF_PATH, 'QU_TopoInputs.inp'), 'w') as input_file:
         input_file.write("Specify file name for custom topo (full path)\n")
         input_file.write("{}\n".format(topo_fname))

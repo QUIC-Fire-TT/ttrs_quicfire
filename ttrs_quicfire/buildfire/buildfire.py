@@ -60,13 +60,13 @@ class QF_Fuel_Arrays:
     def __init__(self, domain, FUEL_PATH, use_topo=True): 
         self.dom = domain
         self.rhof = dat.fort_import(domain, os.path.join(FUEL_PATH, 'bulk_density.dat'))
-        self.rhof_name = 'bulk_density.dat'
+        self.rhof_name = 'treesrhof.dat'
         self.moist = dat.fort_import(domain,  os.path.join(FUEL_PATH, 'moisture.dat'))
-        self.moist_name = 'moisture.dat'
+        self.moist_name = 'treesmoist.dat'
         self.depth = dat.fort_import(domain,  os.path.join(FUEL_PATH, 'depth.dat'))
-        self.depth_name = 'depth.dat'
+        self.depth_name = 'treesfueldepth.dat'
         self.topo = dat.fort_import(domain, os.path.join(FUEL_PATH, 'topo.dat'), False)
-        self.topo_name = 'topo.dat'
+        self.topo_name = 'ftelevation.dat'
         self.use_topo = use_topo
         self.fuel_arrs = [self.rhof,self.moist,self.depth,self.topo]
         self.name_arrs = [self.rhof_name,self.moist_name,self.depth_name,self.topo_name]
