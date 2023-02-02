@@ -45,21 +45,26 @@ qf_arrs.update_surface_moisture(moist_in_plot=0.07, moist_out_plot=1)
 qf_arrs.mod_wetlands(fmc=0.5, bulk_density=3)
 
 ###Build ignition file and windfield
-#Wind Option 1: Manual
-speeds = [0.1, 1, 2, 3, 2, 0.1, 1, 3, 4, 2, 1, 2]
-directions = [90, 100, 95, 90, 80, 70, 75, 80, 85, 90, 95, 100]
-times = list(range(0,(300*12),300))
-avg_wind_speed = 1.5
-avg_wind_dir = np.average(directions)
-qf_arrs.custom_windfield(speeds=speeds, dirs=directions, times=times)
 
-#Wind Option 2: Build windfield
+#Wind Option 1: Manual
+# speeds = [0.1, 1, 2, 3, 2, 0.1, 1, 3, 4, 2, 1, 2]
+# directions = [90, 100, 95, 90, 80, 70, 75, 80, 85, 90, 95, 100]
+# times = list(range(0,(300*12),300))
 # avg_wind_speed = 1.5
-# avg_wind_dir = 215
-#qf_arrs.calc_normal_windfield(start_speed = avg_wind_speed, start_dir = avg_wind_dir)
+# avg_wind_dir = np.average(directions)
+
+#Wind Option 2: Build normal windfield
+avg_wind_speed = 1.5
+avg_wind_dir = 215
 
 #Build Ignition
 bf.atv_ignition(dom, wind_dir=avg_wind_dir, line_space_chain = 2)
+
+# Wind Option 1: Manual (matches above option)
+# qf_arrs.custom_windfield(speeds=speeds, dirs=directions, times=times)
+
+# Wind Option 2: Normal (matches above option)
+qf_arrs.calc_normal_windfield(start_speed = avg_wind_speed, start_dir = avg_wind_dir)
 
 #Build QF simulation
 bf.build_qf_run(qf_arrs)
